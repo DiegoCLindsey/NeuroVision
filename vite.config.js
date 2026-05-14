@@ -5,4 +5,7 @@ export default defineConfig({
   plugins: [react()],
   // BASE_URL es '/NeuroVision/' en GitHub Pages y '/' en dev local
   base: process.env.VITE_BASE_PATH || '/',
+  build: {
+    chunkSizeWarningLimit: 700, // Firebase SDK es ~600 KB sin minificar
+  },
 })

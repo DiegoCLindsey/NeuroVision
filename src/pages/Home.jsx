@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { collection, query, where, getDocs } from 'firebase/firestore'
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import CreateEventForm from '../components/admin/CreateEventForm'
 
@@ -32,7 +32,6 @@ export default function Home() {
     const id = joinId.trim()
     if (!id) return
     setJoinError('')
-    const { getDoc, doc } = await import('firebase/firestore')
     const snap = await getDoc(doc(db, 'events', id))
     if (!snap.exists()) {
       setJoinError('Evento no encontrado. Verifica el código.')
