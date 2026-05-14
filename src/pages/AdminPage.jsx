@@ -48,13 +48,13 @@ export default function AdminPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
         <p>No tienes permiso para administrar este evento.</p>
-        <Link to={`/event/${id}`} className="btn btn-primary">Ver como espectador</Link>
+        <Link to={`/NeuroVision/event/${id}`} className="btn btn-primary">Ver como espectador</Link>
       </div>
     )
   }
 
-  const spectatorUrl = `${window.location.origin}/event/${id}`
-  const screenUrl = `${window.location.origin}/event/${id}/screen`
+  const spectatorUrl = `${window.location.origin}/NeuroVision/event/${id}`
+  const screenUrl = `${window.location.origin}/NeuroVision/event/${id}/screen`
 
   return (
     <div className="page">
