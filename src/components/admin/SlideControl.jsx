@@ -14,16 +14,16 @@ export default function SlideControl({ event, participants, votes }) {
     ? shuffledOrder.map(id => phaseParticipants.find(p => p.id === id)).filter(Boolean)
     : phaseParticipants
 
-  async function setSlide(participantId, action = 'present', mode = 'presentation') {
+  async function setSlide(participantId) {
     await updateDoc(doc(db, 'events', event.id), {
-      currentSlide: { participantId, action, mode, bannerVisible: true },
+      currentSlide: { participantId, action: 'present', mode: 'presentation', bannerVisible: true },
     })
   }
 
   async function setMode(newMode) {
-    if (!currentSlide) return
+    if (!currentSlide?.participantId) return
     await updateDoc(doc(db, 'events', event.id), {
-      currentSlide: { ...currentSlide, mode: newMode },
+      'currentSlide.mode': newMode,
     })
   }
 
