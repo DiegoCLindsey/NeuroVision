@@ -193,4 +193,8 @@ export const COUNTRIES = [
   { code: 'zm', name: 'Zambia' },
   { code: 'zw', name: 'Zimbabue' },
   { code: 'xk', name: 'Kosovo' },
+  // Países históricos (Eurovisión)
+  { code: 'yu', name: 'Yugoslavia' },
+  { code: 'cs', name: 'Checoslovaquia' },
+  { code: 'su', name: 'Unión Soviética' },
 ]
