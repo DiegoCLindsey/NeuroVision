@@ -13,7 +13,7 @@ import ParticipantList from '../components/admin/ParticipantList'
 import PhaseControl from '../components/admin/PhaseControl'
 import SlideControl from '../components/admin/SlideControl'
 import ResultsView from '../components/admin/ResultsView'
-import { PHASE_LABELS } from '../utils/scoring'
+import { PHASE_LABELS, OPTIONAL_PHASES } from '../utils/scoring'
 
 const TABS = ['Participantes', 'Control', 'Resultados']
 
@@ -207,6 +207,31 @@ export default function AdminPage() {
                 ))}
               </div>
               <button className="btn btn-secondary" onClick={saveQualCfg}>Guardar clasificados</button>
+
+              <div className="divider" />
+              <h4 style={{ fontSize: '14px', marginBottom: '4px', fontWeight: 600 }}>Fases activas</h4>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                Desactiva fases para ir directamente a la Final sin clasificatoria ni semis.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                {OPTIONAL_PHASES.map(p => {
+                  const enabled = (event.config?.enabledPhases ?? OPTIONAL_PHASES).includes(p)
+                  return (
+                    <label key={p} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={async () => {
+                          const current = event.config?.enabledPhases ?? OPTIONAL_PHASES
+                          const next = enabled ? current.filter(x => x !== p) : [...current, p]
+                          await updateDoc(doc(db, 'events', id), { 'config.enabledPhases': next })
+                        }}
+                      />
+                      {PHASE_LABELS[p]}
+                    </label>
+                  )
+                })}
+              </div>
             </div>
           </div>
         )}

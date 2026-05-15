@@ -1,9 +1,6 @@
 import { doc, updateDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { nextPhase, topParticipants, computeScores, PHASE_LABELS, PHASE_ORDER } from '../../utils/scoring'
-
-// Simplified phase sequence for navigation
-const SIMPLE_PHASES = ['lobby', 'semifinal', 'final', 'done']
+import { nextPhaseInOrder, topParticipants, computeScores, PHASE_LABELS, getActivePhaseOrder } from '../../utils/scoring'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -17,13 +14,14 @@ function shuffle(arr) {
 export default function PhaseControl({ event, participants, votes }) {
   const phase = event.phase
   const isLast = phase === 'done'
+  const activeOrder = getActivePhaseOrder(event.config?.enabledPhases)
 
-  // Find prev phase in PHASE_ORDER
-  const phaseIdx = PHASE_ORDER.indexOf(phase)
-  const prevPhaseVal = phaseIdx > 0 ? PHASE_ORDER[phaseIdx - 1] : null
+  // Find prev/next phase in active order
+  const phaseIdx = activeOrder.indexOf(phase)
+  const prevPhaseVal = phaseIdx > 0 ? activeOrder[phaseIdx - 1] : null
 
   async function advance() {
-    const next = nextPhase(phase)
+    const next = nextPhaseInOrder(phase, activeOrder)
     if (next === 'done') {
       if (!confirm('¿Finalizar el evento?')) return
       await updateDoc(doc(db, 'events', event.id), { phase: 'done', currentSlide: null })
@@ -109,15 +107,15 @@ export default function PhaseControl({ event, participants, votes }) {
     <div className="card">
       <h3 style={{ marginBottom: '16px', fontSize: '16px' }}>Control de fases</h3>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {PHASE_ORDER.filter(p => p !== 'done').map(p => (
+        {activeOrder.filter(p => p !== 'done').map((p, i) => (
           <div key={p} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
             <div style={{
               width: '36px', height: '36px', borderRadius: '50%',
-              background: phase === p ? 'var(--color-primary)' : PHASE_ORDER.indexOf(p) < PHASE_ORDER.indexOf(phase) ? 'var(--color-success)' : 'var(--bg-secondary)',
-              border: `2px solid ${phase === p ? 'var(--color-primary)' : PHASE_ORDER.indexOf(p) < PHASE_ORDER.indexOf(phase) ? 'var(--color-success)' : 'var(--border-color)'}`,
+              background: phase === p ? 'var(--color-primary)' : activeOrder.indexOf(p) < activeOrder.indexOf(phase) ? 'var(--color-success)' : 'var(--bg-secondary)',
+              border: `2px solid ${phase === p ? 'var(--color-primary)' : activeOrder.indexOf(p) < activeOrder.indexOf(phase) ? 'var(--color-success)' : 'var(--border-color)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
             }}>
-              {PHASE_ORDER.indexOf(p) < PHASE_ORDER.indexOf(phase) ? '✓' : PHASE_ORDER.indexOf(p) + 1}
+              {activeOrder.indexOf(p) < activeOrder.indexOf(phase) ? '✓' : i + 1}
             </div>
             <span style={{ fontSize: '10px', color: phase === p ? 'var(--color-primary)' : 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               {PHASE_LABELS[p]}
@@ -137,7 +135,7 @@ export default function PhaseControl({ event, participants, votes }) {
         <span className={`badge badge-${phase}`}>{PHASE_LABELS[phase]}</span>
         {!isLast && (
           <button className="btn btn-accent" onClick={advance}>
-            Avanzar → {PHASE_LABELS[nextPhase(phase)]}
+            Avanzar → {PHASE_LABELS[nextPhaseInOrder(phase, activeOrder)]}
           </button>
         )}
         {isLast && <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>🏆 Evento finalizado</span>}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
+import { OPTIONAL_PHASES, PHASE_LABELS } from '../../utils/scoring'
 
 function toSlug(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -12,6 +13,7 @@ export default function CreateEventForm({ user, onCreated }) {
   const [semi1Top, setSemi1Top] = useState(5)
   const [semi2Top, setSemi2Top] = useState(5)
   const [semifinalTop, setSemifinalTop] = useState(5)
+  const [enabledPhases, setEnabledPhases] = useState(OPTIONAL_PHASES)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -33,6 +35,7 @@ export default function CreateEventForm({ user, onCreated }) {
           semi1Top: Number(semi1Top),
           semi2Top: Number(semi2Top),
           semifinalTop: Number(semifinalTop),
+          enabledPhases,
         },
         phase: 'lobby',
         currentSlide: null,
@@ -78,6 +81,27 @@ export default function CreateEventForm({ user, onCreated }) {
           <input className="input" type="number" min={1} max={50} value={semi2Top}
             onChange={e => setSemi2Top(e.target.value)} />
         </div>
+      </div>
+
+      <div className="form-group">
+        <label className="label">Fases del evento</label>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {OPTIONAL_PHASES.map(p => (
+            <label key={p} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px' }}>
+              <input
+                type="checkbox"
+                checked={enabledPhases.includes(p)}
+                onChange={() => setEnabledPhases(prev =>
+                  prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]
+                )}
+              />
+              {PHASE_LABELS[p]}
+            </label>
+          ))}
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+          Desactiva todo para ir directo a Final.
+        </p>
       </div>
 
       <button className="btn btn-primary btn-lg" disabled={loading}>

@@ -11,9 +11,21 @@ export const PHASE_LABELS = {
 
 export const PHASE_ORDER = ['lobby', 'qualifying', 'semi1', 'semi2', 'final', 'done']
 
+export const OPTIONAL_PHASES = ['qualifying', 'semi1', 'semi2']
+
+export function getActivePhaseOrder(enabledPhases) {
+  const enabled = enabledPhases ?? OPTIONAL_PHASES
+  return ['lobby', ...OPTIONAL_PHASES.filter(p => enabled.includes(p)), 'final', 'done']
+}
+
 export function nextPhase(current) {
   const idx = PHASE_ORDER.indexOf(current)
   return PHASE_ORDER[idx + 1] ?? 'done'
+}
+
+export function nextPhaseInOrder(current, activeOrder) {
+  const idx = activeOrder.indexOf(current)
+  return activeOrder[idx + 1] ?? 'done'
 }
 
 export function computeScores(votes, phase, participantIds) {
