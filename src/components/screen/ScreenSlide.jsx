@@ -236,57 +236,35 @@ export default function ScreenSlide({ event, participant, action, participants, 
     )
   }
 
-  // Performance mode: show video
+  // Performance mode: video fullscreen
   if (mode === 'performance') {
     return (
-      <div style={{
-        minHeight: '100vh', background: 'var(--bg-primary)',
-        display: 'grid', gridTemplateColumns: ytId ? '1fr 1fr' : '1fr',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: 'clamp(24px, 4vw, 60px)',
-          background: 'radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 100%)',
-        }}>
-          <StarArtwork participant={participant} animStep={0} />
-          {action === 'vote' && (
-            <div style={{
-              marginTop: '24px', padding: '12px 28px',
-              background: 'rgba(233,69,96,0.2)', border: '2px solid var(--color-primary)',
-              borderRadius: '100px', color: 'var(--color-primary)', fontWeight: 800,
-              fontSize: 'clamp(14px, 2vw, 20px)', animation: 'pulse 1.5s ease-in-out infinite',
-            }}>
-              🗳️ ¡VOTACIÓN ABIERTA!
-            </div>
-          )}
-        </div>
-        {ytId && (
-          <div style={{ position: 'relative', background: '#000' }}>
-            {participant?.photoUrl && (
-              <div style={{
-                position: 'absolute', top: '20px', right: '20px', zIndex: 10,
-                width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden',
-                border: '3px solid var(--color-accent)',
-              }}>
-                <img src={participant.photoUrl} alt={participant.groupName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            )}
-            <iframe
-              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&controls=1`}
-              style={{ width: '100%', height: '100%', border: 'none', position: 'absolute', inset: 0 }}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen title={participant?.song}
-            />
+      <div style={{ minHeight: '100vh', background: '#000', position: 'relative' }}>
+        {ytId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&controls=1`}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen title={participant?.song}
+          />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
+            <span style={{ fontSize: '48px' }}>🎵</span>
+            <p style={{ color: 'var(--text-secondary)' }}>Sin video disponible</p>
           </div>
         )}
-        <div style={{ position: 'absolute', top: '20px', left: '20px' }}>
+        <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10 }}>
           <span className={`badge badge-${phase}`} style={{ fontSize: '13px', padding: '5px 14px' }}>{PHASE_LABELS[phase]}</span>
         </div>
-        {participant && (
-          <InfoBanner participant={participant} bannerVisible={bannerVisible} autoHideSecs={bannerAutoHideSecs} />
+        {participant?.photoUrl && (
+          <div style={{
+            position: 'absolute', top: '20px', right: '20px', zIndex: 10,
+            width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden',
+            border: '3px solid var(--color-accent)',
+          }}>
+            <img src={participant.photoUrl} alt={participant.groupName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
         )}
-        <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }`}</style>
       </div>
     )
   }
