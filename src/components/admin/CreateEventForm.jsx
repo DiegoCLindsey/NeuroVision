@@ -8,7 +8,10 @@ function toSlug(name) {
 
 export default function CreateEventForm({ user, onCreated }) {
   const [name, setName] = useState('')
-  const [qualifyTop, setQualifyTop] = useState(10)
+  const [qualifyingTop, setQualifyingTop] = useState(10)
+  const [semi1Top, setSemi1Top] = useState(5)
+  const [semi2Top, setSemi2Top] = useState(5)
+  const [semifinalTop, setSemifinalTop] = useState(5)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -23,7 +26,14 @@ export default function CreateEventForm({ user, onCreated }) {
         slug: toSlug(name),
         createdAt: serverTimestamp(),
         ownerId: user.uid,
-        config: { maxPerOrganizer: 3, qualifyTop: Number(qualifyTop) },
+        config: {
+          maxPerOrganizer: 3,
+          qualifyTop: Number(qualifyingTop),
+          qualifyingTop: Number(qualifyingTop),
+          semi1Top: Number(semi1Top),
+          semi2Top: Number(semi2Top),
+          semifinalTop: Number(semifinalTop),
+        },
         phase: 'lobby',
         currentSlide: null,
       })
@@ -40,25 +50,36 @@ export default function CreateEventForm({ user, onCreated }) {
       {error && <div className="alert alert-error">{error}</div>}
       <div className="form-group">
         <label className="label">Nombre del evento</label>
-        <input
-          className="input"
-          placeholder="Ej: Eurovision Amigos 2025"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-        />
+        <input className="input" placeholder="Ej: Eurovision Amigos 2025" value={name}
+          onChange={e => setName(e.target.value)} required />
       </div>
-      <div className="form-group">
-        <label className="label">Clasificados para la final (top N)</label>
-        <input
-          className="input"
-          type="number"
-          min={2}
-          max={50}
-          value={qualifyTop}
-          onChange={e => setQualifyTop(e.target.value)}
-        />
+
+      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px', marginTop: '8px' }}>
+        Clasificados por fase (se puede cambiar después):
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="label">Clasificatoria → Semis</label>
+          <input className="input" type="number" min={2} max={50} value={qualifyingTop}
+            onChange={e => setQualifyingTop(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="label">Semifinal → Final</label>
+          <input className="input" type="number" min={1} max={50} value={semifinalTop}
+            onChange={e => setSemifinalTop(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="label">Semi 1 → Final</label>
+          <input className="input" type="number" min={1} max={50} value={semi1Top}
+            onChange={e => setSemi1Top(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="label">Semi 2 → Final</label>
+          <input className="input" type="number" min={1} max={50} value={semi2Top}
+            onChange={e => setSemi2Top(e.target.value)} />
+        </div>
       </div>
+
       <button className="btn btn-primary btn-lg" disabled={loading}>
         {loading ? 'Creando...' : '✨ Crear evento'}
       </button>

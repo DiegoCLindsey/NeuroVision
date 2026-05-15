@@ -31,6 +31,7 @@ export default function AdminPage() {
   const { votes } = useVotes(id)
   const [tab, setTab] = useState(0)
   const [bannerSecs, setBannerSecs] = useState('')
+  const [qualCfg, setQualCfg] = useState({})
 
   if (authLoading || eventLoading) return <Loader text="Cargando evento..." />
 
@@ -92,6 +93,17 @@ export default function AdminPage() {
     if (isNaN(secs) || secs < 0) return
     await updateDoc(doc(db, 'events', id), { 'config.bannerAutoHideSecs': secs })
     setBannerSecs('')
+  }
+
+  async function saveQualCfg() {
+    const updates = {}
+    for (const [k, v] of Object.entries(qualCfg)) {
+      const n = parseInt(v, 10)
+      if (!isNaN(n) && n > 0) updates[`config.${k}`] = n
+    }
+    if (Object.keys(updates).length === 0) return
+    await updateDoc(doc(db, 'events', id), updates)
+    setQualCfg({})
   }
 
   return (
@@ -170,6 +182,27 @@ export default function AdminPage() {
                 </div>
                 <button className="btn btn-secondary" onClick={saveBannerSecs}>Guardar</button>
               </div>
+
+              <div className="divider" />
+              <h4 style={{ fontSize: '14px', marginBottom: '12px', fontWeight: 600 }}>Clasificados por fase</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '10px' }}>
+                {[
+                  { key: 'qualifyingTop', label: 'Clasificatoria → Semis', def: event.config?.qualifyingTop ?? event.config?.qualifyTop ?? 10 },
+                  { key: 'semifinalTop',  label: 'Semifinal → Final',      def: event.config?.semifinalTop ?? 5 },
+                  { key: 'semi1Top',      label: 'Semi 1 → Final',         def: event.config?.semi1Top ?? 5 },
+                  { key: 'semi2Top',      label: 'Semi 2 → Final',         def: event.config?.semi2Top ?? 5 },
+                ].map(({ key, label, def }) => (
+                  <div key={key} className="form-group" style={{ margin: 0 }}>
+                    <label className="label">{label}</label>
+                    <input className="input" type="number" min={1} max={50}
+                      placeholder={`Actual: ${def}`}
+                      value={qualCfg[key] ?? ''}
+                      onChange={e => setQualCfg(c => ({ ...c, [key]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+              <button className="btn btn-secondary" onClick={saveQualCfg}>Guardar clasificados</button>
             </div>
           </div>
         )}

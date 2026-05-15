@@ -38,15 +38,23 @@ export default function PhaseControl({ event, participants, votes }) {
       // Everyone goes to qualifying
       nextPhaseParticipants = participants.map(p => p.id)
     } else if (phase === 'qualifying') {
+      const qualifyingTop = event.config?.qualifyingTop ?? event.config?.qualifyTop ?? 10
       const scores = computeScores(votes, 'qualifying', participants.map(p => p.id))
-      const top = topParticipants(scores, event.config?.qualifyTop ?? 10)
+      const top = topParticipants(scores, qualifyingTop)
       nextPhaseParticipants = top.slice(0, Math.ceil(top.length / 2))
+    } else if (phase === 'semifinal') {
+      const inSemi = participants.filter(p => p.phases?.includes('semifinal')).map(p => p.id)
+      const scores = computeScores(votes, 'semifinal', inSemi)
+      const semifinalTop = event.config?.semifinalTop ?? Math.ceil(inSemi.length / 2)
+      nextPhaseParticipants = topParticipants(scores, semifinalTop)
     } else if (phase === 'semi1') {
       const inSemi1 = participants.filter(p => p.phases?.includes('semi1')).map(p => p.id)
       const scores = computeScores(votes, 'semi1', inSemi1)
-      nextPhaseParticipants = topParticipants(scores, Math.ceil(inSemi1.length / 2))
+      const semi1Top = event.config?.semi1Top ?? Math.ceil(inSemi1.length / 2)
+      nextPhaseParticipants = topParticipants(scores, semi1Top)
+      const qualifyingTop = event.config?.qualifyingTop ?? event.config?.qualifyTop ?? 10
       const qualScores = computeScores(votes, 'qualifying', participants.map(p => p.id))
-      const allTop = topParticipants(qualScores, event.config?.qualifyTop ?? 10)
+      const allTop = topParticipants(qualScores, qualifyingTop)
       const semi2Participants = allTop.slice(Math.ceil(allTop.length / 2))
       for (const pid of semi2Participants) {
         const p = participants.find(p => p.id === pid)
@@ -59,7 +67,8 @@ export default function PhaseControl({ event, participants, votes }) {
     } else if (phase === 'semi2') {
       const inSemi2 = participants.filter(p => p.phases?.includes('semi2')).map(p => p.id)
       const scores = computeScores(votes, 'semi2', inSemi2)
-      const semi2Winners = topParticipants(scores, Math.ceil(inSemi2.length / 2))
+      const semi2Top = event.config?.semi2Top ?? Math.ceil(inSemi2.length / 2)
+      const semi2Winners = topParticipants(scores, semi2Top)
       const semi1Winners = participants.filter(p => p.phases?.includes('semi1') && p.phases?.includes('final')).map(p => p.id)
       nextPhaseParticipants = [...new Set([...semi1Winners, ...semi2Winners])]
     }
