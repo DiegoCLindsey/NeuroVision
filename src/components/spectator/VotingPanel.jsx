@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { POINTS, getVoterId, countryFlag } from '../../utils/scoring'
+import { POINTS, getVoterId } from '../../utils/scoring'
+import FlagImage from '../shared/FlagImage'
 
 export default function VotingPanel({ eventId, phase, participants, existingVote }) {
   const [ballot, setBallot] = useState(existingVote ?? [])
@@ -81,7 +82,7 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
             return p ? (
               <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
                 <span style={{ color: 'var(--color-accent)', fontWeight: 800, minWidth: '32px' }}>{POINTS[i]} pts</span>
-                <span>{countryFlag(p.country)} {p.groupName}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FlagImage code={p.country} size={18} /> {p.groupName}</span>
               </div>
             ) : null
           })}
@@ -107,7 +108,7 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
               return (
                 <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <span style={{ color: 'var(--color-accent)', fontWeight: 800, minWidth: '36px', fontSize: '14px' }}>{POINTS[i]} pts</span>
-                  <span style={{ flex: 1, fontSize: '14px' }}>{countryFlag(p.country)} {p.groupName}</span>
+                  <span style={{ flex: 1, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}><FlagImage code={p.country} size={16} /> {p.groupName}</span>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button className="btn btn-secondary btn-sm btn-icon" onClick={() => moveUp(i)} disabled={i === 0}>↑</button>
                     <button className="btn btn-secondary btn-sm btn-icon" onClick={() => moveDown(i)} disabled={i === ballot.length - 1}>↓</button>
@@ -134,7 +135,7 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
             >
               {p.photoUrl
                 ? <img src={p.photoUrl} alt={p.groupName} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
-                : <span style={{ fontSize: '32px' }}>{countryFlag(p.country)}</span>
+                : <FlagImage code={p.country} size={32} />
               }
               <span style={{ fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>{p.groupName}</span>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>{p.song}</span>

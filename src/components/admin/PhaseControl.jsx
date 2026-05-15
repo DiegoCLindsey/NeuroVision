@@ -2,9 +2,25 @@ import { doc, updateDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { nextPhase, topParticipants, computeScores, PHASE_LABELS, PHASE_ORDER } from '../../utils/scoring'
 
+// Simplified phase sequence for navigation
+const SIMPLE_PHASES = ['lobby', 'semifinal', 'final', 'done']
+
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export default function PhaseControl({ event, participants, votes }) {
   const phase = event.phase
   const isLast = phase === 'done'
+
+  // Find prev phase in PHASE_ORDER
+  const phaseIdx = PHASE_ORDER.indexOf(phase)
+  const prevPhaseVal = phaseIdx > 0 ? PHASE_ORDER[phaseIdx - 1] : null
 
   async function advance() {
     const next = nextPhase(phase)
@@ -24,13 +40,11 @@ export default function PhaseControl({ event, participants, votes }) {
     } else if (phase === 'qualifying') {
       const scores = computeScores(votes, 'qualifying', participants.map(p => p.id))
       const top = topParticipants(scores, event.config?.qualifyTop ?? 10)
-      // First half to semi1
       nextPhaseParticipants = top.slice(0, Math.ceil(top.length / 2))
     } else if (phase === 'semi1') {
       const inSemi1 = participants.filter(p => p.phases?.includes('semi1')).map(p => p.id)
       const scores = computeScores(votes, 'semi1', inSemi1)
       nextPhaseParticipants = topParticipants(scores, Math.ceil(inSemi1.length / 2))
-      // Also put second half of qualifying into semi2
       const qualScores = computeScores(votes, 'qualifying', participants.map(p => p.id))
       const allTop = topParticipants(qualScores, event.config?.qualifyTop ?? 10)
       const semi2Participants = allTop.slice(Math.ceil(allTop.length / 2))
@@ -60,14 +74,28 @@ export default function PhaseControl({ event, participants, votes }) {
       }
     }
 
-    // Set first slide for new phase
-    const firstId = nextPhaseParticipants[0] ?? null
+    // Shuffle the order for this phase and set first slide
+    const shuffledOrder = shuffle(nextPhaseParticipants)
+    const firstId = shuffledOrder[0] ?? null
+
     batch.update(doc(db, 'events', event.id), {
       phase: next,
-      currentSlide: firstId ? { participantId: firstId, action: 'present' } : null,
+      shuffledOrder,
+      currentSlide: firstId
+        ? { participantId: firstId, action: 'present', mode: 'presentation', bannerVisible: true }
+        : null,
     })
 
     await batch.commit()
+  }
+
+  async function goBack() {
+    if (!prevPhaseVal) return
+    if (!confirm(`¿Volver a la fase "${PHASE_LABELS[prevPhaseVal]}"? El progreso de la fase actual se perderá.`)) return
+    await updateDoc(doc(db, 'events', event.id), {
+      phase: prevPhaseVal,
+      currentSlide: null,
+    })
   }
 
   return (
@@ -90,7 +118,15 @@ export default function PhaseControl({ event, participants, votes }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <button
+          className="btn btn-secondary"
+          onClick={goBack}
+          disabled={!prevPhaseVal}
+          title={prevPhaseVal ? `Volver a ${PHASE_LABELS[prevPhaseVal]}` : 'Ya estás en la primera fase'}
+        >
+          ← Fase anterior
+        </button>
         <span className={`badge badge-${phase}`}>{PHASE_LABELS[phase]}</span>
         {!isLast && (
           <button className="btn btn-accent" onClick={advance}>

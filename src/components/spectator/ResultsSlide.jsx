@@ -1,4 +1,5 @@
-import { computeScores, getVotesForParticipant, countryFlag, POINTS } from '../../utils/scoring'
+import { computeScores, getVotesForParticipant, POINTS } from '../../utils/scoring'
+import FlagImage from '../shared/FlagImage'
 
 export default function ResultsSlide({ event, participants, votes, compact = false }) {
   const rd = event.currentSlide?.resultsData
@@ -61,8 +62,8 @@ export default function ResultsSlide({ event, participants, votes, compact = fal
                   <img src={p.photoUrl} alt={p.groupName} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: compact ? '14px' : '16px' }}>
-                    {countryFlag(p.country)} {p.groupName}
+                  <div style={{ fontWeight: 700, fontSize: compact ? '14px' : '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <FlagImage code={p.country} size={16} /> {p.groupName}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{p.song}</div>
                   <div style={{ height: '3px', background: 'var(--bg-secondary)', borderRadius: '2px', marginTop: '6px' }}>
@@ -88,7 +89,7 @@ export default function ResultsSlide({ event, participants, votes, compact = fal
               <img src={currentParticipant.photoUrl} alt={currentParticipant.groupName}
                 style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', marginBottom: '12px', border: '3px solid var(--color-accent)' }} />
             ) : (
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}>{countryFlag(currentParticipant.country)}</div>
+              <div style={{ marginBottom: '12px' }}><FlagImage code={currentParticipant.country} size={48} /></div>
             )}
             <h3 style={{ fontWeight: 800, marginBottom: '4px' }}>{currentParticipant.groupName}</h3>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '12px' }}>{currentParticipant.song}</p>
@@ -146,8 +147,8 @@ export default function ResultsSlide({ event, participants, votes, compact = fal
                 </span>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
-                      {countryFlag(p.country)} {p.groupName}
+                    <span style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <FlagImage code={p.country} size={14} /> {p.groupName}
                     </span>
                     <span style={{ fontWeight: 800, color: score > 0 ? 'var(--color-accent)' : 'var(--text-muted)', fontSize: '15px' }}>
                       {score}

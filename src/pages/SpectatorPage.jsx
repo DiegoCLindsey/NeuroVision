@@ -7,7 +7,8 @@ import Loader from '../components/shared/Loader'
 import SlideDisplay from '../components/spectator/SlideDisplay'
 import VotingPanel from '../components/spectator/VotingPanel'
 import ResultsSlide from '../components/spectator/ResultsSlide'
-import { PHASE_LABELS, getVoterId, computeScores, countryFlag } from '../utils/scoring'
+import { PHASE_LABELS, getVoterId, computeScores } from '../utils/scoring'
+import FlagImage from '../components/shared/FlagImage'
 
 export default function SpectatorPage() {
   const { id } = useParams()
@@ -115,7 +116,7 @@ export default function SpectatorPage() {
                     {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
                   </span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700 }}>{countryFlag(p.country)} {p.groupName}</div>
+                    <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}><FlagImage code={p.country} size={18} /> {p.groupName}</div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{p.song}</div>
                   </div>
                   <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--color-accent)' }}>{scores[p.id] ?? 0} pts</span>
@@ -135,7 +136,7 @@ export default function SpectatorPage() {
             ) : action === 'winner' ? (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: '60px', marginBottom: '12px' }}>🏆</div>
-                <div style={{ fontSize: '48px', marginBottom: '8px' }}>{countryFlag(currentParticipant?.country)}</div>
+                <div style={{ marginBottom: '8px' }}><FlagImage code={currentParticipant?.country} size={48} /></div>
                 <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '6px',
                   background: 'linear-gradient(135deg, #fff, var(--color-accent))',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
@@ -146,7 +147,7 @@ export default function SpectatorPage() {
             ) : showVoting && action === 'vote' ? (
               <VotingPanel eventId={id} phase={phase} participants={phaseParticipants} existingVote={myBallot} />
             ) : (
-              <SlideDisplay participant={currentParticipant} action={action} />
+              <SlideDisplay participant={currentParticipant} action={action} mode={currentSlide?.mode} />
             )}
           </>
         )}
