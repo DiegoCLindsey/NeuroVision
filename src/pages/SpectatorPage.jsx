@@ -180,7 +180,7 @@ export default function SpectatorPage() {
                 <ResultsSlide event={event} participants={participants} votes={votes} compact />
               </div>
             ) : action === 'winner' ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <div style={{ fontSize: '60px', marginBottom: '12px' }}>🏆</div>
                 <div style={{ marginBottom: '8px' }}><FlagImage code={currentParticipant?.country} size={48} /></div>
                 <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '6px',
@@ -188,7 +188,23 @@ export default function SpectatorPage() {
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   {currentParticipant?.groupName}
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>"{currentParticipant?.song}"</p>
+                <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '20px' }}>"{currentParticipant?.song}"</p>
+                {currentParticipant?.videoUrl && (() => {
+                  const m = currentParticipant.videoUrl.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/)
+                  const ytId = m?.[1]
+                  return ytId ? (
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 0 40px rgba(255,215,0,0.3)' }}>
+                      <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+                          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen title={currentParticipant.song}
+                        />
+                      </div>
+                    </div>
+                  ) : null
+                })()}
               </div>
             ) : showVoting && action === 'vote' ? (
               <VotingPanel eventId={id} phase={phase} participants={phaseParticipants} existingVote={myBallot} />
