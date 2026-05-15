@@ -40,8 +40,7 @@ export default function PhaseControl({ event, participants, votes }) {
     } else if (phase === 'qualifying') {
       const qualifyingTop = event.config?.qualifyingTop ?? event.config?.qualifyTop ?? 10
       const scores = computeScores(votes, 'qualifying', participants.map(p => p.id))
-      const top = topParticipants(scores, qualifyingTop)
-      nextPhaseParticipants = top.slice(0, Math.ceil(top.length / 2))
+      nextPhaseParticipants = topParticipants(scores, qualifyingTop)
     } else if (phase === 'semifinal') {
       const inSemi = participants.filter(p => p.phases?.includes('semifinal')).map(p => p.id)
       const scores = computeScores(votes, 'semifinal', inSemi)
@@ -52,18 +51,6 @@ export default function PhaseControl({ event, participants, votes }) {
       const scores = computeScores(votes, 'semi1', inSemi1)
       const semi1Top = event.config?.semi1Top ?? Math.ceil(inSemi1.length / 2)
       nextPhaseParticipants = topParticipants(scores, semi1Top)
-      const qualifyingTop = event.config?.qualifyingTop ?? event.config?.qualifyTop ?? 10
-      const qualScores = computeScores(votes, 'qualifying', participants.map(p => p.id))
-      const allTop = topParticipants(qualScores, qualifyingTop)
-      const semi2Participants = allTop.slice(Math.ceil(allTop.length / 2))
-      for (const pid of semi2Participants) {
-        const p = participants.find(p => p.id === pid)
-        if (p && !p.phases?.includes('semi2')) {
-          batch.update(doc(db, 'events', event.id, 'participants', pid), {
-            phases: [...(p.phases ?? []), 'semi2'],
-          })
-        }
-      }
     } else if (phase === 'semi2') {
       const inSemi2 = participants.filter(p => p.phases?.includes('semi2')).map(p => p.id)
       const scores = computeScores(votes, 'semi2', inSemi2)
