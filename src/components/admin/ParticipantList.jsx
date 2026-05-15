@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { deleteDoc, doc, updateDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { COUNTRIES } from '../../utils/countries'
 import FlagImage from '../shared/FlagImage'
@@ -81,10 +81,22 @@ function EditRow({ p, eventId, onDone }) {
 
 export default function ParticipantList({ eventId, participants }) {
   const [editingId, setEditingId] = useState(null)
+  const [savedIds, setSavedIds] = useState(new Set())
 
   async function handleDelete(pid) {
     if (!confirm('¿Eliminar este participante?')) return
     await deleteDoc(doc(db, 'events', eventId, 'participants', pid))
+  }
+
+  async function saveToLibrary(p) {
+    await setDoc(doc(db, 'artists', p.id), {
+      groupName: p.groupName,
+      song: p.song,
+      country: p.country ?? '',
+      videoUrl: p.videoUrl ?? '',
+      photoUrl: p.photoUrl ?? '',
+    }, { merge: true })
+    setSavedIds(s => new Set([...s, p.id]))
   }
 
   if (participants.length === 0) {
@@ -122,10 +134,18 @@ export default function ParticipantList({ eventId, participants }) {
                   {p.videoUrl && <span style={{ marginLeft: '8px', color: 'var(--color-primary)', fontSize: '11px' }}>▶ video</span>}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                 {p.phases?.map(ph => (
                   <span key={ph} className={`badge badge-${ph}`}>{ph}</span>
                 ))}
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => saveToLibrary(p)}
+                  title="Guardar en biblioteca de artistas"
+                  style={savedIds.has(p.id) ? { color: 'var(--color-accent)' } : {}}
+                >
+                  {savedIds.has(p.id) ? '★' : '☆'}
+                </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(p.id)} title="Editar">✎</button>
                 <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(p.id)} title="Eliminar">✕</button>
               </div>

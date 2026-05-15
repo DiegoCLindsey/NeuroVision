@@ -42,6 +42,15 @@ jobs:
       - name: Preparar dist (404.html para SPA + .nojekyll)
         run: cp dist/index.html dist/404.html && touch dist/.nojekyll
 
+      - name: Deploy Firestore rules
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only firestore:rules
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
