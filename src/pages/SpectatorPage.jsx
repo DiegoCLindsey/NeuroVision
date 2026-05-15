@@ -7,6 +7,7 @@ import Loader from '../components/shared/Loader'
 import SlideDisplay from '../components/spectator/SlideDisplay'
 import VotingPanel from '../components/spectator/VotingPanel'
 import ResultsSlide from '../components/spectator/ResultsSlide'
+import PresentationSlide from '../components/shared/PresentationSlide'
 import { PHASE_LABELS, getVoterId, computeScores } from '../utils/scoring'
 import FlagImage from '../components/shared/FlagImage'
 
@@ -61,6 +62,7 @@ export default function SpectatorPage() {
   const phase = event.phase
   const currentSlide = event.currentSlide
   const action = currentSlide?.action
+  const slideMode = currentSlide?.mode ?? 'presentation'
   const currentParticipant = participants.find(p => p.id === currentSlide?.participantId)
   const phaseParticipants = participants.filter(p => p.phases?.includes(phase))
   const voterId = getVoterId()
@@ -69,28 +71,53 @@ export default function SpectatorPage() {
   const scores = computeScores(votes, phase === 'done' ? 'final' : phase, phaseParticipants.map(p => p.id))
   const sorted = phaseParticipants.slice().sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0))
 
+  // Full-screen presentation: presentation mode, participant visible, not voting panel
+  const isFullPresentation =
+    phase !== 'lobby' && phase !== 'done' &&
+    action !== 'waiting' && action !== 'results' && action !== 'winner' &&
+    !showVoting && slideMode === 'presentation' && !!currentParticipant
+
+  const header = (
+    <div className="header">
+      <div className="header-inner">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Link to="/" className="logo">⭐ NV</Link>
+          <span className={`badge badge-${phase}`}>{PHASE_LABELS[phase]}</span>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{voterName}</span>
+          {action === 'vote' && (
+            <button className="btn btn-primary btn-sm" onClick={() => setShowVoting(v => !v)}>
+              {showVoting ? '📺 Ver slide' : '🗳️ Votar'}
+            </button>
+          )}
+          {action === 'waiting' && (
+            <span style={{ fontSize: '12px', color: 'var(--color-accent)', fontWeight: 600 }}>🔒 Votaciones cerradas</span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  if (isFullPresentation) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+        {header}
+        <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+          <PresentationSlide
+            key={`${currentParticipant.id}-pres`}
+            participant={currentParticipant}
+            action={action}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="page">
       <div className="stars-bg" />
-      <div className="header">
-        <div className="header-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Link to="/" className="logo">⭐ NV</Link>
-            <span className={`badge badge-${phase}`}>{PHASE_LABELS[phase]}</span>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{voterName}</span>
-            {action === 'vote' && (
-              <button className="btn btn-primary btn-sm" onClick={() => setShowVoting(v => !v)}>
-                {showVoting ? '📺 Ver slide' : '🗳️ Votar'}
-              </button>
-            )}
-            {action === 'waiting' && (
-              <span style={{ fontSize: '12px', color: 'var(--color-accent)', fontWeight: 600 }}>🔒 Votaciones cerradas</span>
-            )}
-          </div>
-        </div>
-      </div>
+      {header}
 
       <div className="page-content" style={{ position: 'relative', zIndex: 1 }}>
         {phase === 'lobby' && (
@@ -166,7 +193,7 @@ export default function SpectatorPage() {
             ) : showVoting && action === 'vote' ? (
               <VotingPanel eventId={id} phase={phase} participants={phaseParticipants} existingVote={myBallot} />
             ) : (
-              <SlideDisplay participant={currentParticipant} action={action} mode={currentSlide?.mode} />
+              <SlideDisplay participant={currentParticipant} action={action} mode={slideMode} />
             )}
           </>
         )}

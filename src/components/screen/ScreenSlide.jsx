@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { PHASE_LABELS } from '../../utils/scoring'
 import FlagImage from '../shared/FlagImage'
 import ResultsSlide from '../spectator/ResultsSlide'
+import PresentationSlide from '../shared/PresentationSlide'
 
 function getYouTubeId(url) {
   if (!url) return null
@@ -10,90 +11,6 @@ function getYouTubeId(url) {
   return m ? m[1] : null
 }
 
-// Rounded star: quadratic bezier at each tip (t=0.3 rounding factor)
-const starPath = 'M93.4,30 Q100,12 106.6,30 L166.8,72 Q186,72 170.4,83.4 L148.7,153.4 Q155,172 138.5,160.3 L61.5,160.3 Q45,172 51.3,153.4 L29.6,83.4 Q14,72 33.2,72 Z'
-
-function StarArtwork({ participant, animStep }) {
-  const code = participant?.country?.toLowerCase()
-  const flagUrl = code && code !== 'other' ? `https://flagcdn.com/w640/${code}.png` : null
-  const photoUrl = participant?.photoUrl
-
-  // During step 1 (animStep === 1): large star, no fill, outline + glow, centered
-  // During step 2+ (animStep >= 2): normal star with flag fill
-  const isStep1 = animStep === 1
-
-  if (isStep1) {
-    return (
-      <div style={{
-        position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 20,
-        pointerEvents: 'none',
-      }}>
-        <div style={{
-          width: '200px', height: '185px',
-          animation: 'star-zoom-in 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards',
-          transformOrigin: 'center center',
-        }}>
-          <svg viewBox="0 0 200 185" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 30px rgba(255,215,0,0.9)) drop-shadow(0 0 60px rgba(255,215,0,0.5))' }}>
-            <path d={starPath} fill="none" stroke="var(--color-accent)" strokeWidth="3" />
-          </svg>
-        </div>
-        <style>{`
-          @keyframes star-zoom-in {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-        `}</style>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 'min(60vw, 60vh)', height: 'min(60vw, 60vh)', position: 'relative' }}>
-        <div style={{
-          position: 'absolute', inset: '-10%',
-          background: 'radial-gradient(ellipse at center, rgba(255,215,0,0.25) 0%, transparent 70%)',
-          animation: 'pulse-glow 2s ease-in-out infinite',
-        }} />
-        <svg viewBox="0 0 200 185" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 20px rgba(255,215,0,0.6))' }}>
-          <defs>
-            <clipPath id="star-clip">
-              <path d={starPath} />
-            </clipPath>
-            {photoUrl && (
-              <pattern id="photo-fill" patternUnits="userSpaceOnUse" x="0" y="0" width="200" height="185">
-                <image href={photoUrl} x="-10" y="-10" width="220" height="205" preserveAspectRatio="xMidYMid slice" />
-              </pattern>
-            )}
-          </defs>
-          {photoUrl ? (
-            <path d={starPath} fill="url(#photo-fill)" />
-          ) : flagUrl ? (
-            <g clipPath="url(#star-clip)">
-              <image
-                href={flagUrl}
-                x="0" y="0" width="200" height="185"
-                preserveAspectRatio="xMidYMid slice"
-                style={{ animation: 'wave-flag 3s ease-in-out infinite', transformOrigin: '100px 92px' }}
-              />
-            </g>
-          ) : (
-            <path d={starPath} fill="var(--color-secondary)" />
-          )}
-          <path d={starPath} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" />
-        </svg>
-      </div>
-      <style>{`
-        @keyframes pulse-glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-        @keyframes wave-flag {
-          0%, 100% { transform: skewX(0deg) scaleX(1); }
-          25% { transform: skewX(-4deg) scaleX(1.03); }
-          75% { transform: skewX(4deg) scaleX(1.03); }
-        }
-      `}</style>
-    </div>
-  )
-}
 
 function InfoBanner({ participant, bannerVisible, autoHideSecs }) {
   const [visible, setVisible] = useState(true)
@@ -141,31 +58,6 @@ export default function ScreenSlide({ event, participant, action, participants, 
   const bannerAutoHideSecs = event?.config?.bannerAutoHideSecs ?? 10
   const bannerVisible = event?.currentSlide?.bannerVisible !== false
 
-  // 4-step animation state for presentation mode
-  const [animStep, setAnimStep] = useState(0)
-  const prevIdRef = useRef(null)
-
-  useEffect(() => {
-    if (mode !== 'presentation') return
-    if (!participant?.id) return
-    if (participant.id === prevIdRef.current) return
-    prevIdRef.current = participant.id
-
-    // Start animation sequence
-    setAnimStep(1)
-    const t1 = setTimeout(() => setAnimStep(2), 800)
-    const t2 = setTimeout(() => setAnimStep(3), 1600)
-    const t3 = setTimeout(() => setAnimStep(4), 2400)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [participant?.id, mode])
-
-  // Reset animation when mode changes
-  useEffect(() => {
-    if (mode !== 'presentation') {
-      setAnimStep(0)
-      prevIdRef.current = null
-    }
-  }, [mode])
 
   if (action === 'waiting') {
     return (
@@ -320,74 +212,20 @@ export default function ScreenSlide({ event, participant, action, participants, 
     )
   }
 
-  // Presentation mode (default): show star + info, NO video
+  // Presentation mode (default)
   return (
-    <div style={{
-      minHeight: '100vh', background: 'var(--bg-primary)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      {/* Step 1: large star zoom in */}
-      {animStep === 1 && <StarArtwork participant={participant} animStep={1} />}
-
-      {/* Steps 2+: normal presentation layout */}
-      {animStep !== 1 && (
-        <div style={{
-          width: '100%', height: '100%',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: 'clamp(24px, 4vw, 60px)',
-          background: 'radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 100%)',
-        }}>
-          <StarArtwork participant={participant} animStep={animStep} />
-
-          {/* Step 3: artist name fades in */}
-          <div style={{
-            marginTop: '24px', textAlign: 'center',
-            opacity: animStep >= 3 ? 1 : 0,
-            transition: 'opacity 0.8s ease',
-          }}>
-            <div style={{
-              fontWeight: 900, fontSize: 'clamp(24px, 4vw, 48px)',
-              background: 'linear-gradient(135deg, #fff, var(--color-accent))',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>
-              {participant?.groupName}
-            </div>
-          </div>
-
-          {/* Step 4: song name fades in */}
-          <div style={{
-            marginTop: '8px', textAlign: 'center',
-            opacity: animStep >= 4 ? 1 : 0,
-            transition: 'opacity 0.8s ease',
-          }}>
-            <div style={{ fontSize: 'clamp(16px, 2.5vw, 28px)', color: 'var(--color-accent)', fontStyle: 'italic' }}>
-              "{participant?.song}"
-            </div>
-          </div>
-        </div>
-      )}
-
-      {action === 'vote' && (
-        <div style={{
-          position: 'absolute', bottom: '120px', left: '50%', transform: 'translateX(-50%)',
-          padding: '12px 28px',
-          background: 'rgba(233,69,96,0.2)', border: '2px solid var(--color-primary)',
-          borderRadius: '100px', color: 'var(--color-primary)', fontWeight: 800,
-          fontSize: 'clamp(14px, 2vw, 20px)', animation: 'pulse 1.5s ease-in-out infinite',
-          whiteSpace: 'nowrap',
-        }}>
-          🗳️ ¡VOTACIÓN ABIERTA!
-        </div>
-      )}
-
-      <div style={{ position: 'absolute', top: '20px', left: '20px' }}>
+    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <PresentationSlide
+        key={`${participant?.id ?? 'none'}-${mode}`}
+        participant={participant}
+        action={action}
+      />
+      <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10 }}>
         <span className={`badge badge-${phase}`} style={{ fontSize: '13px', padding: '5px 14px' }}>{PHASE_LABELS[phase]}</span>
       </div>
       {participant && (
         <InfoBanner participant={participant} bannerVisible={bannerVisible} autoHideSecs={bannerAutoHideSecs} />
       )}
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }`}</style>
     </div>
   )
 }
