@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { doc, updateDoc, getDocs, collection, writeBatch } from 'firebase/firestore'
+import { doc, updateDoc, deleteDoc, getDocs, collection, writeBatch } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import { useAuth } from '../hooks/useAuth'
 import { useEvent } from '../hooks/useEvent'
@@ -124,6 +124,7 @@ export default function AdminPage() {
           <div>
             <ParticipantForm eventId={id} />
             <ParticipantList eventId={id} participants={participants} />
+
             <div className="divider" />
             <div className="card" style={{ border: '1px solid rgba(233,69,96,0.3)' }}>
               <h3 style={{ fontSize: '15px', marginBottom: '16px', color: 'var(--color-danger)' }}>⚠️ Zona de peligro</h3>
@@ -142,6 +143,7 @@ export default function AdminPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <PhaseControl event={event} participants={participants} votes={votes} />
             <SlideControl event={event} participants={participants} votes={votes} />
+
             <div className="card">
               <h3 style={{ marginBottom: '16px', fontSize: '16px' }}>QR para espectadores</h3>
               <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
