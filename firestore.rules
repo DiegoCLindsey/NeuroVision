@@ -1,26 +1,38 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─── Lista de emails autorizados para crear eventos y artistas ───────────
+    function isAllowed() {
+      return request.auth != null && request.auth.token.email in [
+        // Añade aquí los emails autorizados:
+        'tu_email@gmail.com'
+      ];
+    }
+
+    function isOwner(resource) {
+      return request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+
     match /events/{eventId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow create: if isAllowed();
+      allow update, delete: if isOwner(resource);
 
       match /participants/{participantId} {
         allow read: if true;
-        allow write: if request.auth != null;
+        allow write: if isOwner(get(/databases/$(database)/documents/events/$(eventId)));
       }
 
       match /votes/{userId} {
         allow read: if true;
-        // Cualquiera puede votar (espectadores anónimos con UUID local)
-        allow write: if true;
+        allow write: if true;  // espectadores anónimos con UUID local
       }
     }
 
     match /artists/{artistId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAllowed();
     }
   }
 }
