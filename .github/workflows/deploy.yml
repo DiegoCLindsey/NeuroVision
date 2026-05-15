@@ -41,11 +41,8 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: npm run build
 
-      - name: Copy index.html → 404.html (SPA routing en GitHub Pages)
+      - name: Preparar dist (404.html para SPA + .nojekyll)
         run: cp dist/index.html dist/404.html && touch dist/.nojekyll
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
