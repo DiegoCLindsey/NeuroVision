@@ -141,10 +141,10 @@ export default function ParticipantList({ eventId, participants }) {
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => saveToLibrary(p)}
-                  title="Guardar en biblioteca de artistas"
-                  style={savedIds.has(p.id) ? { color: 'var(--color-accent)' } : {}}
+                  title="Guardar en biblioteca global de artistas"
+                  style={savedIds.has(p.id) ? { borderColor: 'var(--color-accent)', color: 'var(--color-accent)' } : {}}
                 >
-                  {savedIds.has(p.id) ? '★' : '☆'}
+                  {savedIds.has(p.id) ? '✓ Guardado' : '📚 Biblioteca'}
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => setEditingId(p.id)} title="Editar">✎</button>
                 <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(p.id)} title="Eliminar">✕</button>
