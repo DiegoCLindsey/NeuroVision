@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { PHASE_LABELS } from '../../utils/scoring'
 import FlagImage from '../shared/FlagImage'
 import ResultsSlide from '../spectator/ResultsSlide'
@@ -194,19 +195,39 @@ export default function ScreenSlide({ event, participant, action, participants, 
   }
 
   if (!participant && action !== 'results') {
+    const spectatorUrl = event?.id
+      ? `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}/event/${event.id}`
+      : null
+
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
-        <div style={{ fontSize: '80px', animation: 'float 3s ease-in-out infinite' }}>⭐</div>
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '32px', padding: '40px' }}>
+        <div className="stars-bg" />
+        <div style={{ fontSize: '80px', animation: 'float 3s ease-in-out infinite', position: 'relative', zIndex: 1 }}>⭐</div>
         <h1 style={{
-          fontSize: 'clamp(32px, 6vw, 64px)', fontWeight: 900, textAlign: 'center',
+          fontSize: 'clamp(32px, 6vw, 64px)', fontWeight: 900, textAlign: 'center', position: 'relative', zIndex: 1,
           background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
         }}>
           {event?.name ?? 'NeuroVision'}
         </h1>
-        <span className={`badge badge-${phase}`} style={{ fontSize: '14px', padding: '6px 16px' }}>
+        <span className={`badge badge-${phase}`} style={{ fontSize: '14px', padding: '6px 16px', position: 'relative', zIndex: 1 }}>
           {PHASE_LABELS[phase] ?? phase}
         </span>
+
+        {phase === 'lobby' && spectatorUrl && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', position: 'relative', zIndex: 1 }}>
+            <p style={{ fontSize: 'clamp(14px, 2vw, 22px)', color: 'var(--text-secondary)', textAlign: 'center' }}>
+              Escanea para unirte al evento
+            </p>
+            <div style={{ background: '#fff', padding: '20px', borderRadius: '16px', boxShadow: '0 0 40px rgba(255,215,0,0.3)' }}>
+              <QRCodeSVG value={spectatorUrl} size={220} />
+            </div>
+            <p style={{ fontSize: 'clamp(11px, 1.2vw, 14px)', color: 'var(--text-muted)', wordBreak: 'break-all', maxWidth: '400px', textAlign: 'center' }}>
+              {spectatorUrl}
+            </p>
+          </div>
+        )}
+
         <style>{`@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }`}</style>
       </div>
     )
