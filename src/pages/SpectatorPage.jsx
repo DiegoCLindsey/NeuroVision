@@ -85,6 +85,9 @@ export default function SpectatorPage() {
                 {showVoting ? '📺 Ver slide' : '🗳️ Votar'}
               </button>
             )}
+            {action === 'waiting' && (
+              <span style={{ fontSize: '12px', color: 'var(--color-accent)', fontWeight: 600 }}>🔒 Votaciones cerradas</span>
+            )}
           </div>
         </div>
       </div>
@@ -128,7 +131,23 @@ export default function SpectatorPage() {
 
         {phase !== 'lobby' && phase !== 'done' && (
           <>
-            {action === 'results' ? (
+            {action === 'waiting' ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+                <div style={{ fontSize: '56px' }}>🔒</div>
+                <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-accent)' }}>Votaciones cerradas</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>Esperando la presentación de resultados…</p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: 'var(--color-accent)',
+                      animation: `bounce-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
+                    }} />
+                  ))}
+                </div>
+                <style>{`@keyframes bounce-dot { 0%,80%,100%{transform:scale(0.6);opacity:.4} 40%{transform:scale(1);opacity:1} }`}</style>
+              </div>
+            ) : action === 'results' ? (
               <div>
                 <h3 style={{ marginBottom: '20px', fontSize: '18px' }}>📊 Resultados — {PHASE_LABELS[phase]}</h3>
                 <ResultsSlide event={event} participants={participants} votes={votes} compact />

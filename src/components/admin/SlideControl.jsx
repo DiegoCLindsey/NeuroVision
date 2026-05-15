@@ -29,7 +29,13 @@ export default function SlideControl({ event, participants, votes }) {
 
   async function openVoting() {
     await updateDoc(doc(db, 'events', event.id), {
-      currentSlide: { action: 'vote', bannerVisible: true },
+      currentSlide: { action: 'vote', votingOpen: true },
+    })
+  }
+
+  async function closeVoting() {
+    await updateDoc(doc(db, 'events', event.id), {
+      currentSlide: { action: 'waiting', votingOpen: false },
     })
   }
 
@@ -73,6 +79,7 @@ export default function SlideControl({ event, participants, votes }) {
   }
 
   const isVote = currentSlide?.action === 'vote'
+  const isWaiting = currentSlide?.action === 'waiting'
   const isResults = currentSlide?.action === 'results'
   const currentParticipant = orderedParticipants.find(p => p.id === currentSlide?.participantId)
   const currentIdx = orderedParticipants.findIndex(p => p.id === currentSlide?.participantId)
@@ -130,13 +137,6 @@ export default function SlideControl({ event, participants, votes }) {
               >
                 ▶️ Actuación
               </button>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={toggleBanner}
-                disabled={!currentSlide}
-              >
-                {currentSlide?.bannerVisible !== false ? '🏷️ Ocultar banner' : '🏷️ Mostrar banner'}
-              </button>
             </div>
           )}
 
@@ -149,14 +149,12 @@ export default function SlideControl({ event, participants, votes }) {
             </div>
           )}
 
-          {/* Open voting when all have performed */}
-          {allPerformed && currentSlide?.participantId && (
-            <div style={{ marginBottom: '12px' }}>
-              <button className="btn btn-primary" onClick={openVoting}>
-                🗳️ Abrir votación
-              </button>
-            </div>
-          )}
+          {/* Open voting button — always available once a phase is running */}
+          <div style={{ marginBottom: '12px' }}>
+            <button className="btn btn-primary" onClick={openVoting}>
+              🗳️ Abrir votaciones
+            </button>
+          </div>
 
           <div className="divider" style={{ margin: '12px 0' }} />
           <p className="label" style={{ marginBottom: '8px' }}>Ir directamente a:</p>
@@ -176,11 +174,22 @@ export default function SlideControl({ event, participants, votes }) {
 
       {isVote && (
         <div style={{ marginBottom: '12px' }}>
-          <div className="alert alert-info" style={{ marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(100,149,237,0.15)', border: '1px solid rgba(100,149,237,0.4)', fontSize: '14px' }}>
-            🗳️ Votación abierta. Los espectadores pueden votar ahora.
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(100,149,237,0.15)', border: '1px solid rgba(100,149,237,0.4)', fontSize: '14px', marginBottom: '12px' }}>
+            🗳️ Votaciones abiertas — los espectadores pueden votar ahora.
+          </div>
+          <button className="btn btn-danger" onClick={closeVoting}>
+            🔒 Cerrar votaciones
+          </button>
+        </div>
+      )}
+
+      {isWaiting && (
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(255,165,0,0.15)', border: '1px solid rgba(255,165,0,0.4)', fontSize: '14px', marginBottom: '12px' }}>
+            🔒 Votaciones cerradas — espectadores en sala de espera.
           </div>
           <button className="btn btn-accent" onClick={showResults}>
-            📊 Ver resultados
+            📊 Presentar resultados
           </button>
         </div>
       )}

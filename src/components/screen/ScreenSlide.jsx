@@ -165,6 +165,34 @@ export default function ScreenSlide({ event, participant, action, participants, 
     }
   }, [mode])
 
+  if (action === 'waiting') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', textAlign: 'center', padding: '40px' }}>
+        <div className="stars-bg" />
+        <div style={{ fontSize: '80px', animation: 'pulse-glow 2s ease-in-out infinite' }}>🔒</div>
+        <h2 style={{ fontSize: 'clamp(24px, 4vw, 48px)', fontWeight: 900, color: 'var(--color-accent)', position: 'relative', zIndex: 1 }}>
+          Votaciones cerradas
+        </h2>
+        <p style={{ fontSize: 'clamp(16px, 2vw, 24px)', color: 'var(--text-secondary)', position: 'relative', zIndex: 1 }}>
+          Esperando la presentación de resultados…
+        </p>
+        <div style={{ display: 'flex', gap: '8px', position: 'relative', zIndex: 1 }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{
+              width: '12px', height: '12px', borderRadius: '50%',
+              background: 'var(--color-accent)',
+              animation: `bounce-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
+            }} />
+          ))}
+        </div>
+        <style>{`
+          @keyframes bounce-dot { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+          @keyframes pulse-glow { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        `}</style>
+      </div>
+    )
+  }
+
   if (!participant && action !== 'results') {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
