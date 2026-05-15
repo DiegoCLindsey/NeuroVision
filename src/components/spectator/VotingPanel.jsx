@@ -67,6 +67,7 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
   function editVote() { setSubmitted(false) }
 
   const available = participants.filter(p => !ballot.includes(p.id))
+  const isFull = ballot.length >= POINTS.length
 
   if (submitted) {
     return (
@@ -120,18 +121,30 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
           </div>
         </div>
       )}
+      {/* Submit button floats up right below ballot when full */}
+      {isFull && (
+        <button
+          className="btn btn-primary btn-lg"
+          style={{ width: '100%', marginBottom: '20px' }}
+          onClick={submitVote}
+          disabled={loading}
+        >
+          {loading ? 'Enviando...' : `🗳️ Enviar voto (${ballot.length} participante${ballot.length !== 1 ? 's' : ''})`}
+        </button>
+      )}
+
       <div style={{ marginBottom: '20px' }}>
         <p className="label" style={{ marginBottom: '10px' }}>
-          {ballot.length >= POINTS.length ? 'Máximo alcanzado' : 'Haz clic para votar'}
+          {isFull ? 'Máximo alcanzado — quita uno para cambiar' : 'Haz clic para añadir'}
         </p>
         <div className="grid-3">
           {available.map(p => (
             <button
               key={p.id}
               className="btn btn-secondary"
-              style={{ flexDirection: 'column', height: 'auto', padding: '14px 10px', textAlign: 'center', gap: '8px', opacity: ballot.length >= POINTS.length ? 0.4 : 1 }}
+              style={{ flexDirection: 'column', height: 'auto', padding: '14px 10px', textAlign: 'center', gap: '8px', opacity: isFull ? 0.35 : 1 }}
               onClick={() => toggleParticipant(p.id)}
-              disabled={ballot.length >= POINTS.length}
+              disabled={isFull}
             >
               {p.photoUrl
                 ? <img src={p.photoUrl} alt={p.groupName} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
@@ -143,14 +156,18 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
           ))}
         </div>
       </div>
-      <button
-        className="btn btn-primary btn-lg"
-        style={{ width: '100%' }}
-        onClick={submitVote}
-        disabled={ballot.length === 0 || loading}
-      >
-        {loading ? 'Enviando...' : `🗳️ Enviar voto (${ballot.length} participante${ballot.length !== 1 ? 's' : ''})`}
-      </button>
+
+      {/* Submit button at bottom when not full */}
+      {!isFull && (
+        <button
+          className="btn btn-primary btn-lg"
+          style={{ width: '100%' }}
+          onClick={submitVote}
+          disabled={ballot.length === 0 || loading}
+        >
+          {loading ? 'Enviando...' : `🗳️ Enviar voto (${ballot.length} participante${ballot.length !== 1 ? 's' : ''})`}
+        </button>
+      )}
     </div>
   )
 }

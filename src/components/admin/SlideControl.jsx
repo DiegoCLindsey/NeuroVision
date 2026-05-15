@@ -57,7 +57,7 @@ export default function SlideControl({ event, participants, votes }) {
     const currentIdx = orderedParticipants.findIndex(p => p.id === currentSlide?.participantId)
     const prev = orderedParticipants[currentIdx - 1]
     if (prev) {
-      await setSlide(prev.id, 'present', currentSlide?.mode ?? 'presentation')
+      await setSlide(prev.id, 'present', 'presentation')
     }
   }
 
@@ -163,7 +163,7 @@ export default function SlideControl({ event, participants, votes }) {
               <button
                 key={p.id}
                 className={`btn btn-sm ${currentSlide?.participantId === p.id ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => setSlide(p.id, 'present', currentMode)}
+                onClick={() => setSlide(p.id, 'present', 'presentation')}
               >
                 {i + 1}. {p.groupName}
               </button>

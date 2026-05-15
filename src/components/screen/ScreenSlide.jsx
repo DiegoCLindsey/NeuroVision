@@ -213,6 +213,10 @@ export default function ScreenSlide({ event, participant, action, participants, 
   }
 
   // Presentation mode (default)
+  const spectatorUrl = event?.id
+    ? `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}/event/${event.id}`
+    : null
+
   return (
     <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
       <PresentationSlide
@@ -223,6 +227,17 @@ export default function ScreenSlide({ event, participant, action, participants, 
       <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10 }}>
         <span className={`badge badge-${phase}`} style={{ fontSize: '13px', padding: '5px 14px' }}>{PHASE_LABELS[phase]}</span>
       </div>
+      {action === 'vote' && spectatorUrl && (
+        <div style={{
+          position: 'absolute', top: '20px', right: '20px', zIndex: 10,
+          background: '#fff', padding: '10px', borderRadius: '12px',
+          boxShadow: '0 0 30px rgba(255,215,0,0.4)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+        }}>
+          <QRCodeSVG value={spectatorUrl} size={110} />
+          <p style={{ color: '#000', fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px' }}>VOTA DESDE TU MÓVIL</p>
+        </div>
+      )}
       {participant && (
         <InfoBanner participant={participant} bannerVisible={bannerVisible} autoHideSecs={bannerAutoHideSecs} />
       )}
