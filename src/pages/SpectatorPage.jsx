@@ -35,7 +35,7 @@ export default function SpectatorPage() {
 
   if (!nameSet) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '0', padding: '24px' }}>
         <div className="stars-bg" />
         <div className="card" style={{ maxWidth: '360px', width: '100%', textAlign: 'center', padding: '40px 32px', position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌟</div>
@@ -62,9 +62,11 @@ export default function SpectatorPage() {
   const action = currentSlide?.action
   const currentParticipant = participants.find(p => p.id === currentSlide?.participantId)
   const phaseParticipants = participants.filter(p => p.phases?.includes(phase))
+
   const voterId = getVoterId()
   const myVote = votes.find(v => v.userId === voterId)
   const myBallot = myVote?.[phase] ?? []
+
   const scores = computeScores(votes, phase === 'done' ? 'final' : phase, phaseParticipants.map(p => p.id))
   const sorted = phaseParticipants.slice().sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0))
 
@@ -81,7 +83,7 @@ export default function SpectatorPage() {
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{voterName}</span>
             {action === 'vote' && (
               <button className="btn btn-primary btn-sm" onClick={() => setShowVoting(v => !v)}>
-                {showVoting ? '📺 Ver slide' : '🗳️ Votar'}
+                {showVoting ? '📺 Ver slide' : '🗺️ Votar'}
               </button>
             )}
           </div>
@@ -141,7 +143,7 @@ export default function SpectatorPage() {
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   {currentParticipant?.groupName}
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>"{{currentParticipant?.song}}"</p>
+                <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}">"{{currentParticipant?.song}}"</p>
               </div>
             ) : showVoting && action === 'vote' ? (
               <VotingPanel eventId={id} phase={phase} participants={phaseParticipants} existingVote={myBallot} />
