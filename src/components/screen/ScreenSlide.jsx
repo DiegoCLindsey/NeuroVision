@@ -10,7 +10,8 @@ function getYouTubeId(url) {
   return m ? m[1] : null
 }
 
-const starPoints = '100,12 122,72 186,72 134,110 155,172 100,133 45,172 66,110 14,72 78,72'
+// Rounded star: quadratic bezier at each tip (t=0.3 rounding factor)
+const starPath = 'M93.4,30 Q100,12 106.6,30 L166.8,72 Q186,72 170.4,83.4 L148.7,153.4 Q155,172 138.5,160.3 L61.5,160.3 Q45,172 51.3,153.4 L29.6,83.4 Q14,72 33.2,72 Z'
 
 function StarArtwork({ participant, animStep }) {
   const code = participant?.country?.toLowerCase()
@@ -33,7 +34,7 @@ function StarArtwork({ participant, animStep }) {
           transformOrigin: 'center center',
         }}>
           <svg viewBox="0 0 200 185" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 30px rgba(255,215,0,0.9)) drop-shadow(0 0 60px rgba(255,215,0,0.5))' }}>
-            <polygon points={starPoints} fill="none" stroke="var(--color-accent)" strokeWidth="3" />
+            <path d={starPath} fill="none" stroke="var(--color-accent)" strokeWidth="3" />
           </svg>
         </div>
         <style>{`
@@ -57,7 +58,7 @@ function StarArtwork({ participant, animStep }) {
         <svg viewBox="0 0 200 185" style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 0 20px rgba(255,215,0,0.6))' }}>
           <defs>
             <clipPath id="star-clip">
-              <polygon points={starPoints} />
+              <path d={starPath} />
             </clipPath>
             {photoUrl && (
               <pattern id="photo-fill" patternUnits="userSpaceOnUse" x="0" y="0" width="200" height="185">
@@ -66,7 +67,7 @@ function StarArtwork({ participant, animStep }) {
             )}
           </defs>
           {photoUrl ? (
-            <polygon points={starPoints} fill="url(#photo-fill)" clipPath="url(#star-clip)" />
+            <path d={starPath} fill="url(#photo-fill)" />
           ) : flagUrl ? (
             <g clipPath="url(#star-clip)">
               <image
@@ -77,9 +78,9 @@ function StarArtwork({ participant, animStep }) {
               />
             </g>
           ) : (
-            <polygon points={starPoints} fill="var(--color-secondary)" clipPath="url(#star-clip)" />
+            <path d={starPath} fill="var(--color-secondary)" />
           )}
-          <polygon points={starPoints} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" />
+          <path d={starPath} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" />
         </svg>
       </div>
       <style>{`
@@ -291,6 +292,7 @@ export default function ScreenSlide({ event, participant, action, participants, 
       <div style={{ minHeight: '100vh', background: '#000', position: 'relative' }}>
         {ytId ? (
           <iframe
+            key={`${participant?.id}-${mode}`}
             src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&controls=1`}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
