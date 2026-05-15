@@ -194,12 +194,7 @@ export default function SlideControl({ event, participants, votes }) {
         </div>
       )}
 
-      <div style={{ marginTop: isResults ? '0' : '16px' }}>
-        {isResults && (
-          <div className="alert alert-info" style={{ marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(100,149,237,0.15)', border: '1px solid rgba(100,149,237,0.4)', fontSize: '14px' }}>
-            Modo resultados activo. Usa los controles de abajo para revelar.
-          </div>
-        )}
+      <div style={{ marginTop: '16px' }}>
         <ResultsSlideControl event={event} participants={participants} votes={votes} />
       </div>
     </div>

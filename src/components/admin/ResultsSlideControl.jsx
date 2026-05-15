@@ -63,7 +63,7 @@ export default function ResultsSlideControl({ event, participants, votes }) {
     })
   }
 
-  if (event.currentSlide?.action !== 'results') {
+  if (event.currentSlide?.action !== 'results' || !rd) {
     return (
       <div style={{ marginTop: '12px' }}>
         <button className="btn btn-primary" onClick={startResults} disabled={phaseParticipants.length === 0}>
@@ -72,8 +72,6 @@ export default function ResultsSlideControl({ event, participants, votes }) {
       </div>
     )
   }
-
-  if (!rd) return null
 
   const currentPid = rd.order?.[rd.currentIndex]
   const currentParticipant = participants.find(p => p.id === currentPid)

@@ -139,10 +139,13 @@ export default function ParticipantList({ eventId, participants }) {
                   <span key={ph} className={`badge badge-${ph}`}>{ph}</span>
                 ))}
                 <button
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-sm"
                   onClick={() => saveToLibrary(p)}
                   title="Guardar en biblioteca global de artistas"
-                  style={savedIds.has(p.id) ? { borderColor: 'var(--color-accent)', color: 'var(--color-accent)' } : {}}
+                  style={savedIds.has(p.id)
+                    ? { background: 'rgba(255,215,0,0.15)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }
+                    : { background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.4)', color: 'var(--color-accent)' }
+                  }
                 >
                   {savedIds.has(p.id) ? '✓ Guardado' : '📚 Biblioteca'}
                 </button>
