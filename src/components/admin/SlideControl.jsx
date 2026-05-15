@@ -49,7 +49,7 @@ export default function SlideControl({ event, participants, votes }) {
     const currentIdx = orderedParticipants.findIndex(p => p.id === currentSlide?.participantId)
     const next = orderedParticipants[currentIdx + 1]
     if (next) {
-      await setSlide(next.id, 'present', currentSlide?.mode ?? 'presentation')
+      await setSlide(next.id, 'present', 'presentation')
     }
   }
 
