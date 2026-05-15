@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useEvent } from '../hooks/useEvent'
 import { useParticipants } from '../hooks/useParticipants'
+import { useVotes } from '../hooks/useVotes'
 import ScreenSlide from '../components/screen/ScreenSlide'
 import Loader from '../components/shared/Loader'
 
@@ -8,6 +9,7 @@ export default function ScreenPage() {
   const { id } = useParams()
   const { event, loading } = useEvent(id)
   const { participants } = useParticipants(id)
+  const { votes } = useVotes(id)
 
   if (loading) return <Loader text="Conectando..." />
 
@@ -20,6 +22,8 @@ export default function ScreenPage() {
       event={event}
       participant={currentParticipant}
       action={event?.currentSlide?.action}
+      participants={participants}
+      votes={votes}
     />
   )
 }

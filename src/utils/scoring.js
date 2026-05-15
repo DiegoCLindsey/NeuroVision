@@ -48,6 +48,16 @@ export function countryFlag(code) {
     .join('')
 }
 
+export function getVotesForParticipant(votes, phase, participantId) {
+  return votes
+    .filter(v => (v[phase] ?? []).includes(participantId))
+    .map(v => {
+      const rank = (v[phase] ?? []).indexOf(participantId)
+      return { userId: v.userId, voterName: v.voterName ?? 'Anónimo', rank, points: POINTS[rank] ?? 0 }
+    })
+    .sort((a, b) => b.points - a.points)
+}
+
 export function getVoterId() {
   let id = localStorage.getItem('nv_voter_id')
   if (!id) {

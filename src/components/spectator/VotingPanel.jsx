@@ -49,7 +49,10 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
       const voterId = getVoterId()
       await setDoc(
         doc(db, 'events', eventId, 'votes', voterId),
-        { [phase]: ballot },
+        {
+          [phase]: ballot,
+          voterName: localStorage.getItem('nv_voter_name') ?? 'Anónimo',
+        },
         { merge: true }
       )
       setSubmitted(true)
@@ -60,9 +63,7 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
     }
   }
 
-  function editVote() {
-    setSubmitted(false)
-  }
+  function editVote() { setSubmitted(false) }
 
   const available = participants.filter(p => !ballot.includes(p.id))
 
@@ -96,11 +97,9 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
         <h3 style={{ fontSize: '18px' }}>Tu voto</h3>
         <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{ballot.length}/{POINTS.length} seleccionados</span>
       </div>
-
-      {/* Ballot (ordered picks) */}
       {ballot.length > 0 && (
         <div className="card" style={{ marginBottom: '20px', background: 'var(--bg-secondary)' }}>
-          <p className="label" style={{ marginBottom: '10px' }}>Tu clasificación (arrastra para reordenar)</p>
+          <p className="label" style={{ marginBottom: '10px' }}>Tu clasificación</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {ballot.map((pid, i) => {
               const p = participants.find(x => x.id === pid)
@@ -120,11 +119,9 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
           </div>
         </div>
       )}
-
-      {/* Available participants */}
       <div style={{ marginBottom: '20px' }}>
         <p className="label" style={{ marginBottom: '10px' }}>
-          Participantes disponibles {ballot.length >= POINTS.length ? '(máximo alcanzado)' : `(haz clic para votar)`}
+          {ballot.length >= POINTS.length ? 'Máximo alcanzado' : 'Haz clic para votar'}
         </p>
         <div className="grid-3">
           {available.map(p => (
@@ -145,7 +142,6 @@ export default function VotingPanel({ eventId, phase, participants, existingVote
           ))}
         </div>
       </div>
-
       <button
         className="btn btn-primary btn-lg"
         style={{ width: '100%' }}
