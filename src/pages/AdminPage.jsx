@@ -68,9 +68,13 @@ export default function AdminPage() {
   async function resetEvent() {
     if (!confirm('¿Reiniciar el evento? Se borrará el progreso y los votos, pero se conservarán los participantes.')) return
     const batch = writeBatch(db)
-    const votesSnap = await getDocs(collection(db, 'events', id, 'votes'))
+    const [votesSnap, partSnap] = await Promise.all([
+      getDocs(collection(db, 'events', id, 'votes')),
+      getDocs(collection(db, 'events', id, 'participants')),
+    ])
     votesSnap.docs.forEach(d => batch.delete(d.ref))
-    batch.update(doc(db, 'events', id), { phase: 'lobby', currentSlide: null })
+    partSnap.docs.forEach(d => batch.update(d.ref, { phases: [] }))
+    batch.update(doc(db, 'events', id), { phase: 'lobby', currentSlide: null, shuffledOrder: [] })
     await batch.commit()
   }
 

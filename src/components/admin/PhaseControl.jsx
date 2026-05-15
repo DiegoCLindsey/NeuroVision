@@ -101,10 +101,21 @@ export default function PhaseControl({ event, participants, votes }) {
   async function goBack() {
     if (!prevPhaseVal) return
     if (!confirm(`¿Volver a la fase "${PHASE_LABELS[prevPhaseVal]}"? El progreso de la fase actual se perderá.`)) return
-    await updateDoc(doc(db, 'events', event.id), {
+    const batch = writeBatch(db)
+    // Strip current phase from all participants that have it
+    participants
+      .filter(p => p.phases?.includes(phase))
+      .forEach(p => {
+        batch.update(doc(db, 'events', event.id, 'participants', p.id), {
+          phases: (p.phases ?? []).filter(ph => ph !== phase),
+        })
+      })
+    batch.update(doc(db, 'events', event.id), {
       phase: prevPhaseVal,
       currentSlide: null,
+      shuffledOrder: [],
     })
+    await batch.commit()
   }
 
   return (
