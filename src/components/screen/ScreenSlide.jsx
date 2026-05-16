@@ -12,6 +12,87 @@ function getYouTubeId(url) {
 }
 
 
+function ytCommand(iframeEl, func) {
+  iframeEl?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*')
+}
+
+function WinnerSlide({ participant }) {
+  const iframeRef = useRef(null)
+  const [muted, setMuted] = useState(true)
+  const ytId = getYouTubeId(participant?.videoUrl)
+  const flagUrl = participant?.country ? `https://flagcdn.com/w320/${participant.country.toLowerCase()}.png` : null
+
+  function toggleMute() {
+    ytCommand(iframeRef.current, muted ? 'unMute' : 'mute')
+    setMuted(m => !m)
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#000' }}>
+      {ytId && (
+        <iframe
+          ref={iframeRef}
+          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&controls=0&playlist=${ytId}&rel=0&disablekb=1&enablejsapi=1`}
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none',
+            filter: 'blur(22px)', transform: 'scale(1.15)', opacity: 0.6, zIndex: 0,
+            pointerEvents: 'none',
+          }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          title="bg"
+        />
+      )}
+      {!ytId && flagUrl && (
+        <div style={{
+          position: 'absolute', inset: '-5%', zIndex: 0,
+          backgroundImage: `url(${flagUrl})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          opacity: 0.3, filter: 'blur(16px)', transform: 'scale(1.1)',
+        }} />
+      )}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.5)' }} />
+      <div style={{
+        position: 'relative', zIndex: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', textAlign: 'center', padding: '40px',
+      }}>
+        <div style={{ fontSize: 'clamp(40px, 8vw, 80px)', marginBottom: '16px', animation: 'bounce 1s ease-in-out infinite alternate' }}>🏆</div>
+        <div style={{ marginBottom: '16px' }}>
+          <FlagImage code={participant?.country} size={72} />
+        </div>
+        <h1 style={{
+          fontSize: 'clamp(36px, 7vw, 80px)', fontWeight: 900, lineHeight: 1,
+          background: 'linear-gradient(135deg, #fff 0%, var(--color-accent) 50%, #fff 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          marginBottom: '16px',
+        }}>
+          {participant?.groupName}
+        </h1>
+        <p style={{ fontSize: 'clamp(18px, 3vw, 32px)', color: 'rgba(255,255,255,0.8)', fontStyle: 'italic' }}>
+          "{participant?.song}"
+        </p>
+      </div>
+      {ytId && (
+        <button
+          onClick={toggleMute}
+          style={{
+            position: 'absolute', bottom: '32px', right: '32px', zIndex: 10,
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%',
+            width: '56px', height: '56px', fontSize: '24px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.2s',
+          }}
+          title={muted ? 'Activar sonido' : 'Silenciar'}
+        >
+          {muted ? '🔇' : '🔊'}
+        </button>
+      )}
+      <style>{`@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }`}</style>
+    </div>
+  )
+}
+
 function InfoBanner({ participant, bannerVisible, autoHideSecs }) {
   const [visible, setVisible] = useState(true)
 
@@ -196,60 +277,7 @@ export default function ScreenSlide({ event, participant, action, participants, 
   }
 
   if (action === 'winner') {
-    const winnerYtId = getYouTubeId(participant?.videoUrl)
-    const winnerFlagUrl = participant?.country ? `https://flagcdn.com/w320/${participant.country.toLowerCase()}.png` : null
-
-    return (
-      <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#000' }}>
-        {/* Blurred muted video background */}
-        {winnerYtId && (
-          <iframe
-            src={`https://www.youtube.com/embed/${winnerYtId}?autoplay=1&mute=1&loop=1&controls=0&playlist=${winnerYtId}&rel=0&disablekb=1`}
-            style={{
-              position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none',
-              filter: 'blur(22px)', transform: 'scale(1.15)', opacity: 0.6, zIndex: 0,
-              pointerEvents: 'none',
-            }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            title="bg"
-          />
-        )}
-        {/* Flag fallback when no video */}
-        {!winnerYtId && winnerFlagUrl && (
-          <div style={{
-            position: 'absolute', inset: '-5%', zIndex: 0,
-            backgroundImage: `url(${winnerFlagUrl})`,
-            backgroundSize: 'cover', backgroundPosition: 'center',
-            opacity: 0.3, filter: 'blur(16px)', transform: 'scale(1.1)',
-          }} />
-        )}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.5)' }} />
-        <div style={{
-          position: 'relative', zIndex: 2,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          minHeight: '100vh', textAlign: 'center', padding: '40px',
-        }}>
-          <div style={{ fontSize: 'clamp(40px, 8vw, 80px)', marginBottom: '16px', animation: 'bounce 1s ease-in-out infinite alternate' }}>🏆</div>
-          <div style={{ marginBottom: '16px' }}>
-            <FlagImage code={participant?.country} size={72} />
-          </div>
-          <h1 style={{
-            fontSize: 'clamp(36px, 7vw, 80px)', fontWeight: 900, lineHeight: 1,
-            background: 'linear-gradient(135deg, #fff 0%, var(--color-accent) 50%, #fff 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            marginBottom: '16px',
-          }}>
-            {participant?.groupName}
-          </h1>
-          <p style={{ fontSize: 'clamp(18px, 3vw, 32px)', color: 'rgba(255,255,255,0.8)', fontStyle: 'italic' }}>
-            "{participant?.song}"
-          </p>
-        </div>
-        <style>{`
-          @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
-        `}</style>
-      </div>
-    )
+    return <WinnerSlide participant={participant} />
   }
 
   // Performance mode: video fullscreen
