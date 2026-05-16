@@ -14,6 +14,7 @@ import PhaseControl from '../components/admin/PhaseControl'
 import SlideControl from '../components/admin/SlideControl'
 import RemoteControl from '../components/admin/RemoteControl'
 import AdminManager from '../components/admin/AdminManager'
+import OTPGenerator from '../components/admin/OTPGenerator'
 import ResultsView from '../components/admin/ResultsView'
 import { PHASE_LABELS, OPTIONAL_PHASES } from '../utils/scoring'
 
@@ -166,6 +167,8 @@ export default function AdminPage() {
         {tab === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <PhaseControl event={event} participants={participants} votes={votes} />
+
+            <OTPGenerator event={event} user={user} />
 
             {/* Mobile: compact remote control / Desktop: full SlideControl */}
             <div className="hide-desktop">

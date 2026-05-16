@@ -45,5 +45,10 @@ service cloud.firestore {
       allow read: if true;
       allow write, delete: if isAllowed();
     }
+
+    match /otps/{code} {
+      allow read, delete: if true;   // la pantalla lee y destruye sin auth
+      allow create: if request.auth != null; // solo admin logueado genera
+    }
   }
 }
