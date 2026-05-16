@@ -6,7 +6,7 @@ function getYouTubeId(url) {
   return m ? m[1] : null
 }
 
-const starPath = 'M93.4,30 Q100,12 106.6,30 L166.8,72 Q186,72 170.4,83.4 L148.7,153.4 Q155,172 138.5,160.3 L61.5,160.3 Q45,172 51.3,153.4 L29.6,83.4 Q14,72 33.2,72 Z'
+const starPath = 'M100,10 L121,70 L185,72 L134,111 L153,173 L100,136 L47,173 L66,111 L15,72 L79,70 Z'
 
 function MiniStar({ participant }) {
   const code = participant?.country?.toLowerCase()

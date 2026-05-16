@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { deleteDoc, doc, updateDoc, setDoc } from 'firebase/firestore'
+import { deleteDoc, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { COUNTRIES } from '../../utils/countries'
 import FlagImage from '../shared/FlagImage'
@@ -95,6 +95,7 @@ export default function ParticipantList({ eventId, participants }) {
       country: p.country ?? '',
       videoUrl: p.videoUrl ?? '',
       photoUrl: p.photoUrl ?? '',
+      createdAt: serverTimestamp(),
     }, { merge: true })
     setSavedIds(s => new Set([...s, p.id]))
   }
