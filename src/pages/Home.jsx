@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore'
@@ -12,6 +12,11 @@ export default function Home() {
   const [joinError, setJoinError] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [myEvents, setMyEvents] = useState(null)
+
+  useEffect(() => {
+    setMyEvents(null)
+    if (user) loadMyEvents(user.uid, user.email)
+  }, [user?.uid])
 
   async function loadMyEvents(uid, email) {
     const [ownerSnap, adminSnap] = await Promise.all([
@@ -147,7 +152,7 @@ export default function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '16px' }}>Mis eventos</h3>
               {!myEvents && (
-                <button className="btn btn-secondary btn-sm" onClick={() => loadMyEvents(user.uid, user.email)}>Cargar</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => loadMyEvents(user.uid, user.email)}>↺</button>
               )}
             </div>
             {myEvents && (

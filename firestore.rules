@@ -20,7 +20,10 @@ service cloud.firestore {
     }
 
     match /events/{eventId} {
-      allow read: if true;
+      // Lectura por ID (espectadores, pantalla TV): siempre permitida
+      allow get: if true;
+      // Queries sobre la colección: solo devuelve eventos donde el usuario es admin
+      allow list: if request.auth != null && isEventAdmin(resource.data);
       allow create: if isAllowed();
       allow update, delete: if isEventAdmin(resource.data);
 
