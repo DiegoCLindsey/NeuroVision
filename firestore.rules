@@ -2,26 +2,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── Lista de emails autorizados para crear eventos y artistas ───────────
+    // ─── Emails autorizados para CREAR eventos ────────────────────────────────
     function isAllowed() {
       return request.auth != null && request.auth.token.email in [
-        // Añade aquí los emails autorizados:
+        // Añade aquí los emails autorizados para crear eventos:
         'tu_email@gmail.com'
       ];
     }
 
-    function isOwner(resource) {
-      return request.auth != null && request.auth.uid == resource.data.ownerId;
+    // ─── Admin de un evento concreto ──────────────────────────────────────────
+    // Acepta el ownerId original (backwards compat) o cualquier email en admins[]
+    function isEventAdmin(eventData) {
+      return request.auth != null && (
+        request.auth.uid == eventData.ownerId ||
+        (eventData.admins is list && request.auth.token.email in eventData.admins)
+      );
     }
 
     match /events/{eventId} {
       allow read: if true;
       allow create: if isAllowed();
-      allow update, delete: if isOwner(resource);
+      allow update, delete: if isEventAdmin(resource.data);
 
       match /participants/{participantId} {
         allow read: if true;
-        allow write: if isOwner(get(/databases/$(database)/documents/events/$(eventId)));
+        allow write: if isEventAdmin(
+          get(/databases/$(database)/documents/events/$(eventId)).data
+        );
       }
 
       match /votes/{userId} {
@@ -32,7 +39,7 @@ service cloud.firestore {
 
     match /artists/{artistId} {
       allow read: if true;
-      allow write: if isAllowed();
+      allow write, delete: if isAllowed();
     }
   }
 }

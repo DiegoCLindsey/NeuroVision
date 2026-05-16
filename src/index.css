@@ -343,3 +343,6 @@ body {
   .hide-mobile { display: none !important; }
   .grid-2 { grid-template-columns: 1fr; }
 }
+@media (min-width: 641px) {
+  .hide-desktop { display: none !important; }
+}

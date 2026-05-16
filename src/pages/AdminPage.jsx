@@ -12,14 +12,22 @@ import ParticipantForm from '../components/admin/ParticipantForm'
 import ParticipantList from '../components/admin/ParticipantList'
 import PhaseControl from '../components/admin/PhaseControl'
 import SlideControl from '../components/admin/SlideControl'
+import RemoteControl from '../components/admin/RemoteControl'
+import AdminManager from '../components/admin/AdminManager'
 import ResultsView from '../components/admin/ResultsView'
 import { PHASE_LABELS, OPTIONAL_PHASES } from '../utils/scoring'
 
-const TABS = ['Participantes', 'Control', 'Resultados']
+const TABS = ['Participantes', 'Control', 'Resultados', 'Ajustes']
 
 function buildUrl(path) {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '')
   return `${window.location.origin}${base}${path}`
+}
+
+function isEventAdmin(event, user) {
+  if (!user || !event) return false
+  if (event.ownerId === user.uid) return true
+  return Array.isArray(event.admins) && event.admins.includes(user.email)
 }
 
 export default function AdminPage() {
@@ -53,7 +61,7 @@ export default function AdminPage() {
     )
   }
 
-  if (event.ownerId !== user.uid) {
+  if (!isEventAdmin(event, user)) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
         <p>No tienes permiso para administrar este evento.</p>
@@ -158,9 +166,16 @@ export default function AdminPage() {
         {tab === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <PhaseControl event={event} participants={participants} votes={votes} />
-            <SlideControl event={event} participants={participants} votes={votes} />
 
-            <div className="card">
+            {/* Mobile: compact remote control / Desktop: full SlideControl */}
+            <div className="hide-desktop">
+              <RemoteControl event={event} participants={participants} />
+            </div>
+            <div className="hide-mobile">
+              <SlideControl event={event} participants={participants} votes={votes} />
+            </div>
+
+            <div className="card hide-mobile">
               <h3 style={{ marginBottom: '16px', fontSize: '16px' }}>QR para espectadores</h3>
               <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 <div>
@@ -172,23 +187,47 @@ export default function AdminPage() {
                   <QRDisplay url={screenUrl} label="Modo TV" />
                 </div>
               </div>
-              <div className="divider" />
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="label">Banner TV: ocultar después de (seg)</label>
-                  <input
-                    className="input" type="number" min="0" max="120"
-                    placeholder={`Actual: ${event.config?.bannerAutoHideSecs ?? 10}s (0 = nunca)`}
-                    value={bannerSecs}
-                    onChange={e => setBannerSecs(e.target.value)}
-                    style={{ width: '220px' }}
-                  />
-                </div>
-                <button className="btn btn-secondary" onClick={saveBannerSecs}>Guardar</button>
+            </div>
+          </div>
+        )}
+
+        {tab === 2 && (
+          <ResultsView event={event} participants={participants} />
+        )}
+
+        {tab === 3 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <AdminManager event={event} user={user} />
+
+            <div className="card">
+              <h3 style={{ marginBottom: '16px', fontSize: '15px', fontWeight: 600 }}>Configuración de fases</h3>
+
+              <h4 style={{ fontSize: '13px', marginBottom: '8px', fontWeight: 600, color: 'var(--text-secondary)' }}>Fases activas</h4>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                Desactiva fases para ir directamente a la Final.
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                {OPTIONAL_PHASES.map(p => {
+                  const enabled = (event.config?.enabledPhases ?? OPTIONAL_PHASES).includes(p)
+                  return (
+                    <label key={p} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={async () => {
+                          const current = event.config?.enabledPhases ?? OPTIONAL_PHASES
+                          const next = enabled ? current.filter(x => x !== p) : [...current, p]
+                          await updateDoc(doc(db, 'events', id), { 'config.enabledPhases': next })
+                        }}
+                      />
+                      {PHASE_LABELS[p]}
+                    </label>
+                  )
+                })}
               </div>
 
               <div className="divider" />
-              <h4 style={{ fontSize: '14px', marginBottom: '12px', fontWeight: 600 }}>Clasificados por fase</h4>
+              <h4 style={{ fontSize: '13px', marginBottom: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Clasificados por fase</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '10px' }}>
                 {[
                   { key: 'qualifyingTop', label: 'Clasificatoria → Semis', def: event.config?.qualifyingTop ?? event.config?.qualifyTop ?? 10 },
@@ -209,35 +248,33 @@ export default function AdminPage() {
               <button className="btn btn-secondary" onClick={saveQualCfg}>Guardar clasificados</button>
 
               <div className="divider" />
-              <h4 style={{ fontSize: '14px', marginBottom: '4px', fontWeight: 600 }}>Fases activas</h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                Desactiva fases para ir directamente a la Final sin clasificatoria ni semis.
-              </p>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                {OPTIONAL_PHASES.map(p => {
-                  const enabled = (event.config?.enabledPhases ?? OPTIONAL_PHASES).includes(p)
-                  return (
-                    <label key={p} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
-                      <input
-                        type="checkbox"
-                        checked={enabled}
-                        onChange={async () => {
-                          const current = event.config?.enabledPhases ?? OPTIONAL_PHASES
-                          const next = enabled ? current.filter(x => x !== p) : [...current, p]
-                          await updateDoc(doc(db, 'events', id), { 'config.enabledPhases': next })
-                        }}
-                      />
-                      {PHASE_LABELS[p]}
-                    </label>
-                  )
-                })}
+              <h4 style={{ fontSize: '13px', marginBottom: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Pantalla TV</h4>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="label">Banner: ocultar después de (seg, 0 = nunca)</label>
+                  <input
+                    className="input" type="number" min="0" max="120"
+                    placeholder={`Actual: ${event.config?.bannerAutoHideSecs ?? 10}s`}
+                    value={bannerSecs}
+                    onChange={e => setBannerSecs(e.target.value)}
+                    style={{ width: '220px' }}
+                  />
+                </div>
+                <button className="btn btn-secondary" onClick={saveBannerSecs}>Guardar</button>
               </div>
             </div>
-          </div>
-        )}
 
-        {tab === 2 && (
-          <ResultsView event={event} participants={participants} />
+            <div className="card" style={{ border: '1px solid rgba(233,69,96,0.3)' }}>
+              <h3 style={{ fontSize: '15px', marginBottom: '16px', color: 'var(--color-danger)' }}>⚠️ Zona de peligro</h3>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button className="btn btn-danger" onClick={resetEvent}>↺ Reiniciar progreso</button>
+                <button className="btn btn-danger" onClick={deleteEvent}>🗑️ Eliminar evento</button>
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px' }}>
+                Reiniciar borra votos y fases pero conserva artistas. Eliminar borra todo.
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>
