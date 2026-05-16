@@ -1,33 +1,31 @@
 import { useState, useEffect } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { subscribe, peek } from '../lib/snapshotStore'
 
 export function useEvent(eventId) {
-  const [event, setEvent] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const key = eventId ? `event:${eventId}` : null
+  const [state, setState] = useState(() => {
+    const cached = key ? peek(key) : undefined
+    return { event: cached ?? null, loading: cached === undefined, error: null }
+  })
 
   useEffect(() => {
-    if (!eventId) return
-    setLoading(true)
-    const ref = doc(db, 'events', eventId)
-    return onSnapshot(
-      ref,
-      snap => {
-        if (snap.exists()) {
-          setEvent({ id: snap.id, ...snap.data() })
-        } else {
-          setEvent(null)
-          setError('Evento no encontrado')
-        }
-        setLoading(false)
-      },
-      err => {
-        setError(err.message)
-        setLoading(false)
-      }
+    if (!key) return
+    return subscribe(
+      key,
+      (onData, onError) => onSnapshot(
+        doc(db, 'events', eventId),
+        snap => onData(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+        err => onError(err)
+      ),
+      (data, err) => setState({
+        event: data ?? null,
+        loading: false,
+        error: err ? err.message : (data === null ? 'Evento no encontrado' : null),
+      })
     )
-  }, [eventId])
+  }, [key])
 
-  return { event, loading, error }
+  return state
 }

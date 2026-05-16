@@ -15,7 +15,9 @@ export default function SpectatorPage() {
   const { id } = useParams()
   const { event, loading, error } = useEvent(id)
   const { participants } = useParticipants(id)
-  const { votes } = useVotes(id)
+  const action = event?.currentSlide?.action
+  const votesNeeded = action === 'vote' || action === 'results' || event?.phase === 'done'
+  const { votes } = useVotes(id, { enabled: votesNeeded })
   const [voterName, setVoterName] = useState(() => localStorage.getItem('nv_voter_name') ?? '')
   const [nameSet, setNameSet] = useState(() => !!localStorage.getItem('nv_voter_name'))
   const [showVoting, setShowVoting] = useState(false)
@@ -61,7 +63,6 @@ export default function SpectatorPage() {
 
   const phase = event.phase
   const currentSlide = event.currentSlide
-  const action = currentSlide?.action
   const slideMode = currentSlide?.mode ?? 'presentation'
   const currentParticipant = participants.find(p => p.id === currentSlide?.participantId)
   const phaseParticipants = participants.filter(p => p.phases?.includes(phase))

@@ -1,6 +1,6 @@
 import { collection, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { useArtists, removeLocalArtist } from '../../hooks/useArtists'
+import { useArtists, removeLocalArtist, invalidateArtistsCache } from '../../hooks/useArtists'
 import FlagImage from '../shared/FlagImage'
 import Loader from '../shared/Loader'
 
@@ -27,6 +27,7 @@ export default function ArtistLibrary({ eventId, onImported }) {
     } else {
       try {
         await deleteDoc(doc(db, 'artists', artist.id))
+        invalidateArtistsCache()
       } catch {
         alert('Sin permiso para borrar de la biblioteca global.')
       }

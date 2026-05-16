@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../firebase/config'
-import { saveLocalArtist } from '../../hooks/useArtists'
+import { saveLocalArtist, invalidateArtistsCache } from '../../hooks/useArtists'
 import { COUNTRIES } from '../../utils/countries'
 import FlagImage from '../shared/FlagImage'
 import ArtistLibrary from './ArtistLibrary'
@@ -55,6 +55,7 @@ export default function ParticipantForm({ eventId, onAdded }) {
           videoUrl: form.videoUrl.trim(),
           createdAt: serverTimestamp(),
         })
+        invalidateArtistsCache()
       } catch {
         saveLocalArtist({
           id: crypto.randomUUID(),

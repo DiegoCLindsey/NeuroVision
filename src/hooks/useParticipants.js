@@ -1,22 +1,26 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { subscribe, peek } from '../lib/snapshotStore'
 
 export function useParticipants(eventId) {
-  const [participants, setParticipants] = useState([])
-  const [loading, setLoading] = useState(true)
+  const key = eventId ? `participants:${eventId}` : null
+  const [state, setState] = useState(() => {
+    const cached = key ? peek(key) : undefined
+    return { participants: cached ?? [], loading: cached === undefined }
+  })
 
   useEffect(() => {
-    if (!eventId) return
-    const q = query(
-      collection(db, 'events', eventId, 'participants'),
-      orderBy('createdAt', 'asc')
+    if (!key) return
+    return subscribe(
+      key,
+      (onData) => onSnapshot(
+        query(collection(db, 'events', eventId, 'participants'), orderBy('createdAt', 'asc')),
+        snap => onData(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      ),
+      (data) => setState({ participants: data ?? [], loading: false })
     )
-    return onSnapshot(q, snap => {
-      setParticipants(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-      setLoading(false)
-    })
-  }, [eventId])
+  }, [key])
 
-  return { participants, loading }
+  return state
 }

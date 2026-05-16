@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { deleteDoc, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { saveLocalArtist } from '../../hooks/useArtists'
+import { saveLocalArtist, invalidateArtistsCache } from '../../hooks/useArtists'
 import { COUNTRIES } from '../../utils/countries'
 import FlagImage from '../shared/FlagImage'
 
@@ -99,6 +99,7 @@ export default function ParticipantList({ eventId, participants }) {
         photoUrl: p.photoUrl ?? '',
         createdAt: serverTimestamp(),
       }, { merge: true })
+      invalidateArtistsCache()
     } catch {
       saveLocalArtist({
         id: p.id,

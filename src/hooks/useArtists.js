@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
 const LOCAL_KEY = 'nv_local_artists'
+const CACHE_KEY = 'nv_artists_cache'
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 const CHANGED_EVENT = 'nv_artists_changed'
+
+// ─── Local artists (localStorage) ────────────────────────────────────────────
 
 export function getLocalArtists() {
   try { return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? '[]') } catch { return [] }
@@ -24,19 +28,50 @@ export function removeLocalArtist(id) {
   window.dispatchEvent(new Event(CHANGED_EVENT))
 }
 
-export function useArtists() {
-  const [remote, setRemote] = useState([])
-  const [local, setLocal] = useState(getLocalArtists)
-  const [loading, setLoading] = useState(true)
+// ─── Remote artists cache (localStorage, TTL) ─────────────────────────────────
 
+function readRemoteCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    const { ts, data } = JSON.parse(raw)
+    if (Date.now() - ts > CACHE_TTL_MS) return null
+    return data
+  } catch { return null }
+}
+
+function writeRemoteCache(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })) } catch {}
+}
+
+export function invalidateArtistsCache() {
+  localStorage.removeItem(CACHE_KEY)
+  window.dispatchEvent(new Event(CHANGED_EVENT))
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useArtists() {
+  const [remote, setRemote] = useState(() => readRemoteCache() ?? [])
+  const [local, setLocal] = useState(getLocalArtists)
+  const [loading, setLoading] = useState(() => !readRemoteCache())
+
+  // One-time fetch (getDocs), cached for TTL — no real-time subscription needed
   useEffect(() => {
-    const q = query(collection(db, 'artists'), orderBy('createdAt', 'asc'))
-    return onSnapshot(q, snap => {
-      setRemote(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-      setLoading(false)
-    }, () => setLoading(false))
+    const cached = readRemoteCache()
+    if (cached) { setRemote(cached); setLoading(false); return }
+
+    getDocs(query(collection(db, 'artists'), orderBy('createdAt', 'asc')))
+      .then(snap => {
+        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        writeRemoteCache(data)
+        setRemote(data)
+      })
+      .catch(() => {}) // offline / no permission → use local only
+      .finally(() => setLoading(false))
   }, [])
 
+  // Listen for local artist changes (same-tab events)
   useEffect(() => {
     const handler = () => setLocal(getLocalArtists())
     window.addEventListener(CHANGED_EVENT, handler)
