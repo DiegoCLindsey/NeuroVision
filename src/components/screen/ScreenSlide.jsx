@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { PHASE_LABELS } from '../../utils/scoring'
+import { PHASE_LABELS, computeScores } from '../../utils/scoring'
 import FlagImage from '../shared/FlagImage'
 import ResultsSlide from '../spectator/ResultsSlide'
 import PresentationSlide from '../shared/PresentationSlide'
@@ -87,6 +87,61 @@ export default function ScreenSlide({ event, participant, action, participants, 
     )
   }
 
+  if (phase === 'done') {
+    const allParticipants = participants ?? []
+    const scores = computeScores(votes ?? [], 'final', allParticipants.map(p => p.id))
+    const sorted = allParticipants.slice().sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0))
+    const winner = sorted[0]
+    const winnerFlagUrl = winner?.country ? `https://flagcdn.com/w320/${winner.country.toLowerCase()}.png` : null
+
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', position: 'relative', overflow: 'hidden' }}>
+        {winnerFlagUrl && (
+          <div style={{
+            position: 'absolute', inset: '-5%', zIndex: 0,
+            backgroundImage: `url(${winnerFlagUrl})`,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: 0.25, filter: 'blur(16px)', transform: 'scale(1.1)',
+          }} />
+        )}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,26,0.6)', zIndex: 1 }} />
+        <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(40px, 6vw, 80px) clamp(24px, 5vw, 60px)', maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(24px, 4vw, 48px)' }}>
+            <div style={{ fontSize: 'clamp(40px, 7vw, 72px)', marginBottom: '12px' }}>🏆</div>
+            {winner && <div style={{ marginBottom: '12px' }}><FlagImage code={winner.country} size={56} /></div>}
+            <h1 style={{ fontSize: 'clamp(28px, 5vw, 56px)', fontWeight: 900, marginBottom: '8px' }}>¡Evento finalizado!</h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(14px, 2vw, 22px)' }}>Resultados finales — {event?.name}</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '40px' }}>
+            {sorted.map((p, i) => (
+              <div key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: '16px',
+                padding: 'clamp(10px, 2vw, 18px) clamp(14px, 2.5vw, 24px)',
+                background: i === 0 ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.04)',
+                borderRadius: '12px',
+                border: `1px solid ${i === 0 ? 'rgba(255,215,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+              }}>
+                <span style={{ fontSize: i < 3 ? 'clamp(20px, 3vw, 32px)' : 'clamp(14px, 2vw, 20px)', minWidth: '40px', textAlign: 'center' }}>
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'clamp(14px, 2.2vw, 22px)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FlagImage code={p.country} size={22} /> {p.groupName}
+                  </div>
+                  <div style={{ fontSize: 'clamp(11px, 1.5vw, 16px)', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{p.song}</div>
+                </div>
+                <span style={{ fontWeight: 900, fontSize: 'clamp(16px, 2.5vw, 28px)', color: 'var(--color-accent)' }}>{scores[p.id] ?? 0} pts</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 'clamp(13px, 1.5vw, 18px)' }}>
+            ✨ Gracias por participar en {event?.name}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (!participant && action !== 'results') {
     const spectatorUrl = event?.id
       ? `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}/event/${event.id}`
@@ -142,35 +197,54 @@ export default function ScreenSlide({ event, participant, action, participants, 
 
   if (action === 'winner') {
     const winnerYtId = getYouTubeId(participant?.videoUrl)
+    const winnerFlagUrl = participant?.country ? `https://flagcdn.com/w320/${participant.country.toLowerCase()}.png` : null
+
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a0a 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: 'clamp(40px, 8vw, 80px)', marginBottom: '16px', animation: 'bounce 1s ease-in-out infinite alternate' }}>🏆</div>
-        <div style={{ marginBottom: '8px' }}>
-          <FlagImage code={participant?.country} size={64} />
-        </div>
-        <h1 style={{
-          fontSize: 'clamp(36px, 7vw, 80px)', fontWeight: 900, lineHeight: 1,
-          background: 'linear-gradient(135deg, #fff 0%, var(--color-accent) 50%, #fff 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          marginBottom: '12px',
-        }}>
-          {participant?.groupName}
-        </h1>
-        <p style={{ fontSize: 'clamp(18px, 3vw, 32px)', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '32px' }}>
-          "{participant?.song}"
-        </p>
+      <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#000' }}>
+        {/* Blurred muted video background */}
         {winnerYtId && (
-          <div style={{ width: '100%', maxWidth: '800px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 0 60px rgba(255,215,0,0.3)' }}>
-            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-              <iframe
-                src={`https://www.youtube.com/embed/${winnerYtId}?autoplay=1&rel=0`}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen title={participant?.song}
-              />
-            </div>
-          </div>
+          <iframe
+            src={`https://www.youtube.com/embed/${winnerYtId}?autoplay=1&mute=1&loop=1&controls=0&playlist=${winnerYtId}&rel=0&disablekb=1`}
+            style={{
+              position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none',
+              filter: 'blur(22px)', transform: 'scale(1.15)', opacity: 0.6, zIndex: 0,
+              pointerEvents: 'none',
+            }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            title="bg"
+          />
         )}
+        {/* Flag fallback when no video */}
+        {!winnerYtId && winnerFlagUrl && (
+          <div style={{
+            position: 'absolute', inset: '-5%', zIndex: 0,
+            backgroundImage: `url(${winnerFlagUrl})`,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: 0.3, filter: 'blur(16px)', transform: 'scale(1.1)',
+          }} />
+        )}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.5)' }} />
+        <div style={{
+          position: 'relative', zIndex: 2,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          minHeight: '100vh', textAlign: 'center', padding: '40px',
+        }}>
+          <div style={{ fontSize: 'clamp(40px, 8vw, 80px)', marginBottom: '16px', animation: 'bounce 1s ease-in-out infinite alternate' }}>🏆</div>
+          <div style={{ marginBottom: '16px' }}>
+            <FlagImage code={participant?.country} size={72} />
+          </div>
+          <h1 style={{
+            fontSize: 'clamp(36px, 7vw, 80px)', fontWeight: 900, lineHeight: 1,
+            background: 'linear-gradient(135deg, #fff 0%, var(--color-accent) 50%, #fff 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            marginBottom: '16px',
+          }}>
+            {participant?.groupName}
+          </h1>
+          <p style={{ fontSize: 'clamp(18px, 3vw, 32px)', color: 'rgba(255,255,255,0.8)', fontStyle: 'italic' }}>
+            "{participant?.song}"
+          </p>
+        </div>
         <style>{`
           @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
         `}</style>
