@@ -71,6 +71,8 @@ export default function SpectatorPage() {
   const myBallot = myVote?.[phase] ?? []
   const scores = computeScores(votes, phase === 'done' ? 'final' : phase, phaseParticipants.map(p => p.id))
   const sorted = phaseParticipants.slice().sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0))
+  const winner = phase === 'done' ? sorted[0] : null
+  const winnerFlagUrl = winner?.country ? `https://flagcdn.com/w320/${winner.country.toLowerCase()}.png` : null
 
   // Full-screen presentation: presentation mode, participant visible, not voting panel
   const isFullPresentation =
@@ -118,6 +120,14 @@ export default function SpectatorPage() {
   return (
     <div className="page">
       <div className="stars-bg" />
+      {winnerFlagUrl && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+          backgroundImage: `url(${winnerFlagUrl})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+          opacity: 0.22, filter: 'blur(10px)', transform: 'scale(1.08)',
+        }} />
+      )}
       {header}
 
       <div className="page-content" style={{ position: 'relative', zIndex: 1 }}>
@@ -130,23 +140,8 @@ export default function SpectatorPage() {
         )}
 
         {phase === 'done' && (() => {
-          const winner = sorted[0]
-          const winnerFlagUrl = winner?.country
-            ? `https://flagcdn.com/w320/${winner.country.toLowerCase()}.png`
-            : null
-
           return (
             <div style={{ position: 'relative', minHeight: '60vh' }}>
-              {/* Winner flag background */}
-              {winnerFlagUrl && (
-                <div style={{
-                  position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-                  backgroundImage: `url(${winnerFlagUrl})`,
-                  backgroundSize: 'cover', backgroundPosition: 'center',
-                  opacity: 0.12, filter: 'blur(8px)', transform: 'scale(1.05)',
-                }} />
-              )}
-
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ textAlign: 'center', marginBottom: '32px', paddingTop: '8px' }}>
                   <div style={{ fontSize: '60px', marginBottom: '12px' }}>🏆</div>
