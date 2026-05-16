@@ -16,9 +16,18 @@ function ytCommand(iframeEl, func) {
   iframeEl?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*')
 }
 
+const BTN_STYLE = {
+  background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%',
+  width: '56px', height: '56px', fontSize: '24px', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  transition: 'background 0.2s',
+}
+
 function WinnerSlide({ participant }) {
   const iframeRef = useRef(null)
   const [muted, setMuted] = useState(true)
+  const [overlayVisible, setOverlayVisible] = useState(true)
   const ytId = getYouTubeId(participant?.videoUrl)
   const flagUrl = participant?.country ? `https://flagcdn.com/w320/${participant.country.toLowerCase()}.png` : null
 
@@ -26,6 +35,8 @@ function WinnerSlide({ participant }) {
     ytCommand(iframeRef.current, muted ? 'unMute' : 'mute')
     setMuted(m => !m)
   }
+
+  const show = overlayVisible
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#000' }}>
@@ -35,8 +46,10 @@ function WinnerSlide({ participant }) {
           src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&controls=0&playlist=${ytId}&rel=0&disablekb=1&enablejsapi=1`}
           style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none',
-            filter: 'blur(22px)', transform: 'scale(1.15)', opacity: 0.6, zIndex: 0,
+            filter: show ? 'blur(22px)' : 'blur(0px)',
+            transform: 'scale(1.15)', opacity: show ? 0.6 : 1, zIndex: 0,
             pointerEvents: 'none',
+            transition: 'filter 5s ease, opacity 5s ease',
           }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           title="bg"
@@ -47,14 +60,28 @@ function WinnerSlide({ participant }) {
           position: 'absolute', inset: '-5%', zIndex: 0,
           backgroundImage: `url(${flagUrl})`,
           backgroundSize: 'cover', backgroundPosition: 'center',
-          opacity: 0.3, filter: 'blur(16px)', transform: 'scale(1.1)',
+          filter: show ? 'blur(16px)' : 'blur(0px)',
+          opacity: show ? 0.3 : 1,
+          transform: 'scale(1.1)',
+          transition: 'filter 5s ease, opacity 5s ease',
         }} />
       )}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.5)' }} />
+      {/* Dark overlay fades out together with the content */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 1,
+        background: 'rgba(0,0,0,0.5)',
+        opacity: show ? 1 : 0,
+        transition: 'opacity 2s ease',
+      }} />
+      {/* Winner info */}
       <div style={{
         position: 'relative', zIndex: 2,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         minHeight: '100vh', textAlign: 'center', padding: '40px',
+        opacity: show ? 1 : 0,
+        transform: show ? 'translateY(0)' : 'translateY(-28px)',
+        transition: 'opacity 2s ease, transform 2s ease',
+        pointerEvents: show ? 'auto' : 'none',
       }}>
         <div style={{ fontSize: 'clamp(40px, 8vw, 80px)', marginBottom: '16px', animation: 'bounce 1s ease-in-out infinite alternate' }}>🏆</div>
         <div style={{ marginBottom: '16px' }}>
@@ -72,22 +99,17 @@ function WinnerSlide({ participant }) {
           "{participant?.song}"
         </p>
       </div>
-      {ytId && (
-        <button
-          onClick={toggleMute}
-          style={{
-            position: 'absolute', bottom: '32px', right: '32px', zIndex: 10,
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%',
-            width: '56px', height: '56px', fontSize: '24px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.2s',
-          }}
-          title={muted ? 'Activar sonido' : 'Silenciar'}
-        >
-          {muted ? '🔇' : '🔊'}
+      {/* Controls */}
+      <div style={{ position: 'absolute', bottom: '32px', right: '32px', zIndex: 10, display: 'flex', gap: '12px' }}>
+        <button onClick={() => setOverlayVisible(v => !v)} style={BTN_STYLE} title={show ? 'Ocultar texto' : 'Mostrar texto'}>
+          {show ? '👁️' : '🫣'}
         </button>
-      )}
+        {ytId && (
+          <button onClick={toggleMute} style={BTN_STYLE} title={muted ? 'Activar sonido' : 'Silenciar'}>
+            {muted ? '🔇' : '🔊'}
+          </button>
+        )}
+      </div>
       <style>{`@keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }`}</style>
     </div>
   )
