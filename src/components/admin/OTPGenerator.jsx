@@ -20,6 +20,7 @@ export default function OTPGenerator({ event, user }) {
   const [expiresAt, setExpiresAt] = useState(null)
   const [secsLeft, setSecsLeft] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   // Countdown ticker
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function OTPGenerator({ event, user }) {
 
   async function generate() {
     setLoading(true)
+    setError('')
     try {
       if (code) await deleteDoc(doc(db, 'otps', code)).catch(() => {})
       const newCode = generateCode()
@@ -52,6 +54,10 @@ export default function OTPGenerator({ event, user }) {
       })
       setCode(newCode)
       setExpiresAt(expires.getTime())
+    } catch (err) {
+      setError(err.code === 'permission-denied'
+        ? 'Sin permiso: despliega las reglas de Firestore (colección otps).'
+        : err.message)
     } finally {
       setLoading(false)
     }
@@ -74,6 +80,8 @@ export default function OTPGenerator({ event, user }) {
       <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
         Genera un código de un solo uso para conectar la pantalla TV sin iniciar sesión.
       </p>
+
+      {error && <div className="alert alert-error" style={{ marginBottom: '12px' }}>{error}</div>}
 
       {!code ? (
         <button className="btn btn-secondary" onClick={generate} disabled={loading}>
