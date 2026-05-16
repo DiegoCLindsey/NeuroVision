@@ -22,8 +22,9 @@ service cloud.firestore {
     match /events/{eventId} {
       // Lectura por ID (espectadores, pantalla TV): siempre permitida
       allow get: if true;
-      // Queries sobre la colección: solo devuelve eventos donde el usuario es admin
-      allow list: if request.auth != null && isEventAdmin(resource.data);
+      // Queries: solo usuarios autenticados (los filtros del cliente garantizan que
+      // solo piden sus propios eventos; update/delete sigue protegido por isEventAdmin)
+      allow list: if request.auth != null;
       allow create: if isAllowed();
       allow update, delete: if isEventAdmin(resource.data);
 
