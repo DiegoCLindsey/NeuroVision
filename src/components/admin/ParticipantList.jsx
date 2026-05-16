@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { deleteDoc, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase/config'
+import { saveLocalArtist } from '../../hooks/useArtists'
 import { COUNTRIES } from '../../utils/countries'
 import FlagImage from '../shared/FlagImage'
 
@@ -89,14 +90,26 @@ export default function ParticipantList({ eventId, participants }) {
   }
 
   async function saveToLibrary(p) {
-    await setDoc(doc(db, 'artists', p.id), {
-      groupName: p.groupName,
-      song: p.song,
-      country: p.country ?? '',
-      videoUrl: p.videoUrl ?? '',
-      photoUrl: p.photoUrl ?? '',
-      createdAt: serverTimestamp(),
-    }, { merge: true })
+    try {
+      await setDoc(doc(db, 'artists', p.id), {
+        groupName: p.groupName,
+        song: p.song,
+        country: p.country ?? '',
+        videoUrl: p.videoUrl ?? '',
+        photoUrl: p.photoUrl ?? '',
+        createdAt: serverTimestamp(),
+      }, { merge: true })
+    } catch {
+      saveLocalArtist({
+        id: p.id,
+        groupName: p.groupName,
+        song: p.song,
+        country: p.country ?? '',
+        videoUrl: p.videoUrl ?? '',
+        photoUrl: p.photoUrl ?? '',
+        createdAt: new Date().toISOString(),
+      })
+    }
     setSavedIds(s => new Set([...s, p.id]))
   }
 

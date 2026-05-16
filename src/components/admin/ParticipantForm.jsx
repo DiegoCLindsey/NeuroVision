@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../../firebase/config'
+import { saveLocalArtist } from '../../hooks/useArtists'
 import { COUNTRIES } from '../../utils/countries'
 import FlagImage from '../shared/FlagImage'
 import ArtistLibrary from './ArtistLibrary'
@@ -44,15 +45,27 @@ export default function ParticipantForm({ eventId, onAdded }) {
       // Save to event participants
       await addDoc(collection(db, 'events', eventId, 'participants'), participantData)
 
-      // Also save to global artists library
-      await addDoc(collection(db, 'artists'), {
-        groupName: form.groupName.trim(),
-        song: form.song.trim(),
-        country: form.country,
-        photoUrl,
-        videoUrl: form.videoUrl.trim(),
-        createdAt: serverTimestamp(),
-      })
+      // Also save to global artists library (fall back to local if no permission)
+      try {
+        await addDoc(collection(db, 'artists'), {
+          groupName: form.groupName.trim(),
+          song: form.song.trim(),
+          country: form.country,
+          photoUrl,
+          videoUrl: form.videoUrl.trim(),
+          createdAt: serverTimestamp(),
+        })
+      } catch {
+        saveLocalArtist({
+          id: crypto.randomUUID(),
+          groupName: form.groupName.trim(),
+          song: form.song.trim(),
+          country: form.country,
+          photoUrl,
+          videoUrl: form.videoUrl.trim(),
+          createdAt: new Date().toISOString(),
+        })
+      }
 
       setForm(emptyForm)
       onAdded?.()
