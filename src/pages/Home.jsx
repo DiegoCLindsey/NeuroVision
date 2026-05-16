@@ -13,10 +13,22 @@ export default function Home() {
   const [showCreate, setShowCreate] = useState(false)
   const [myEvents, setMyEvents] = useState(null)
 
-  async function loadMyEvents(uid) {
-    const q = query(collection(db, 'events'), where('ownerId', '==', uid))
-    const snap = await getDocs(q)
-    setMyEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  async function loadMyEvents(uid, email) {
+    const [ownerSnap, adminSnap] = await Promise.all([
+      getDocs(query(collection(db, 'events'), where('ownerId', '==', uid))),
+      email ? getDocs(query(collection(db, 'events'), where('admins', 'array-contains', email))) : Promise.resolve({ docs: [] }),
+    ])
+    const seen = new Set()
+    const events = []
+    for (const snap of [ownerSnap, adminSnap]) {
+      for (const d of snap.docs) {
+        if (!seen.has(d.id)) {
+          seen.add(d.id)
+          events.push({ id: d.id, ...d.data() })
+        }
+      }
+    }
+    setMyEvents(events)
   }
 
   async function handleSignIn() {
@@ -135,7 +147,7 @@ export default function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '16px' }}>Mis eventos</h3>
               {!myEvents && (
-                <button className="btn btn-secondary btn-sm" onClick={() => loadMyEvents(user.uid)}>Cargar</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => loadMyEvents(user.uid, user.email)}>Cargar</button>
               )}
             </div>
             {myEvents && (
