@@ -2,8 +2,9 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { PHASE_LABELS, getActivePhaseOrder } from '../../utils/scoring'
 import FlagImage from '../shared/FlagImage'
+import ResultsSlideControl from './ResultsSlideControl'
 
-export default function RemoteControl({ event, participants }) {
+export default function RemoteControl({ event, participants, votes }) {
   const phase = event.phase
   const currentSlide = event.currentSlide
   const shuffledOrder = event.shuffledOrder ?? []
@@ -136,7 +137,7 @@ export default function RemoteControl({ event, participants }) {
         </div>
       )}
 
-      {/* Voting controls */}
+      {/* Voting / results controls */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {!isVoting && !isWaiting && !isResults && (
           <button
@@ -160,6 +161,13 @@ export default function RemoteControl({ event, participants }) {
           >📊 Mostrar resultados</button>
         )}
       </div>
+
+      {/* Results controls */}
+      {isResults && (
+        <div style={{ marginTop: '16px' }}>
+          <ResultsSlideControl event={event} participants={participants} votes={votes} />
+        </div>
+      )}
 
       {/* Banner toggle */}
       {currentParticipant && !isVoting && !isResults && (

@@ -172,7 +172,7 @@ export default function AdminPage() {
 
             {/* Mobile: compact remote control / Desktop: full SlideControl */}
             <div className="hide-desktop">
-              <RemoteControl event={event} participants={participants} />
+              <RemoteControl event={event} participants={participants} votes={votes} />
             </div>
             <div className="hide-mobile">
               <SlideControl event={event} participants={participants} votes={votes} />
