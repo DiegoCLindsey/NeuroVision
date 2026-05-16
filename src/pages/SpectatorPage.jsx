@@ -129,33 +129,62 @@ export default function SpectatorPage() {
           </div>
         )}
 
-        {phase === 'done' && (
-          <div>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div style={{ fontSize: '60px', marginBottom: '16px' }}>🏆</div>
-              <h2 style={{ marginBottom: '8px' }}>¡Evento finalizado!</h2>
-              <p style={{ color: 'var(--text-secondary)' }}>Resultados finales de {event.name}</p>
-            </div>
-            <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {sorted.map((p, i) => (
-                <div key={p.id} style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px',
-                  background: i === 0 ? 'rgba(255,215,0,0.1)' : 'var(--bg-card)', borderRadius: '10px',
-                  border: `1px solid ${i === 0 ? 'rgba(255,215,0,0.4)' : 'var(--border-color)'}`,
-                }}>
-                  <span style={{ fontSize: i < 3 ? '24px' : '16px', minWidth: '32px', textAlign: 'center' }}>
-                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}><FlagImage code={p.country} size={18} /> {p.groupName}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{p.song}</div>
-                  </div>
-                  <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--color-accent)' }}>{scores[p.id] ?? 0} pts</span>
+        {phase === 'done' && (() => {
+          const winner = sorted[0]
+          const winnerFlagUrl = winner?.country
+            ? `https://flagcdn.com/w320/${winner.country.toLowerCase()}.png`
+            : null
+
+          return (
+            <div style={{ position: 'relative', minHeight: '60vh' }}>
+              {/* Winner flag background */}
+              {winnerFlagUrl && (
+                <div style={{
+                  position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+                  backgroundImage: `url(${winnerFlagUrl})`,
+                  backgroundSize: 'cover', backgroundPosition: 'center',
+                  opacity: 0.12, filter: 'blur(8px)', transform: 'scale(1.05)',
+                }} />
+              )}
+
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ textAlign: 'center', marginBottom: '32px', paddingTop: '8px' }}>
+                  <div style={{ fontSize: '60px', marginBottom: '12px' }}>🏆</div>
+                  {winner && (
+                    <div style={{ marginBottom: '8px' }}>
+                      <FlagImage code={winner.country} size={48} />
+                    </div>
+                  )}
+                  <h2 style={{ marginBottom: '4px' }}>¡Evento finalizado!</h2>
+                  <p style={{ color: 'var(--text-secondary)' }}>Resultados finales de {event.name}</p>
                 </div>
-              ))}
+
+                <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '48px' }}>
+                  {sorted.map((p, i) => (
+                    <div key={p.id} style={{
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px',
+                      background: i === 0 ? 'rgba(255,215,0,0.1)' : 'var(--bg-card)', borderRadius: '10px',
+                      border: `1px solid ${i === 0 ? 'rgba(255,215,0,0.4)' : 'var(--border-color)'}`,
+                    }}>
+                      <span style={{ fontSize: i < 3 ? '24px' : '16px', minWidth: '32px', textAlign: 'center' }}>
+                        {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}><FlagImage code={p.country} size={18} /> {p.groupName}</div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>{p.song}</div>
+                      </div>
+                      <span style={{ fontWeight: 800, fontSize: '18px', color: 'var(--color-accent)' }}>{scores[p.id] ?? 0} pts</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px', paddingBottom: '32px' }}>
+                  ✨ Gracias por participar en {event.name}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {phase !== 'lobby' && phase !== 'done' && (
           <>
